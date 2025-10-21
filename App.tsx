@@ -20,7 +20,6 @@ import { PersonDetailsModalSkeleton } from './components/PersonDetailsModalSkele
 import { ListSubTabs } from './components/ListSubTabs';
 import { MovieGrid } from './components/MovieGrid';
 import { TvShowGrid } from './components/TvShowGrid';
-import { HeroSlider } from './components/HeroSlider';
 import { SearchBar } from './components/SearchBar';
 import { MovieListSkeleton } from './components/MovieListSkeleton';
 
@@ -50,9 +49,6 @@ function App() {
   const [movieGenres, setMovieGenres] = useState<Genre[]>([]);
   const [tvGenres, setTvGenres] = useState<Genre[]>([]);
   
-  // Hero Slider State
-  const [nowPlayingMovies, setNowPlayingMovies] = useState<Movie[]>([]);
-
   // Movie Page Grid State
   const [gridMovies, setGridMovies] = useState<Movie[]>([]);
   const [isGridLoading, setIsGridLoading] = useState(false);
@@ -120,14 +116,12 @@ function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const [movGenres, tvGen, nowMov] = await Promise.all([
+      const [movGenres, tvGen] = await Promise.all([
         getMovieGenres(language),
         getTvGenres(language),
-        getNowPlayingMovies(1, language),
       ]);
       setMovieGenres(movGenres.genres);
       setTvGenres(tvGen.genres);
-      setNowPlayingMovies(nowMov.results);
     } catch (err) {
       setError(t('failedToLoadMovies'));
       console.error(err);
@@ -398,25 +392,22 @@ function App() {
 
   // --- Content Rendering ---
   const renderMoviesPage = () => (
-    <>
-      <HeroSlider movies={nowPlayingMovies.slice(0, 10)} onSelectMovie={handleSelectMovie} />
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12">
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6">{t('movies')}</h2>
-        { (isGridLoading && gridMovies.length === 0) ? <MovieListSkeleton /> :
-          <MovieGrid 
-            movies={gridMovies} 
-            onSelectMovie={handleSelectMovie} 
-            favoriteIds={favoriteIds} 
-            onToggleFavorite={toggleFavorite} 
-            watchlistIds={watchlistIds} 
-            onToggleWatchlist={toggleWatchlist} 
-          />
-        }
-        <div ref={movieLoadMoreRef} className="h-10 flex justify-center items-center">
-          {isGridLoading && gridMovies.length > 0 && <Loader />}
-        </div>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28">
+      <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6">{t('movies')}</h2>
+      { (isGridLoading && gridMovies.length === 0) ? <MovieListSkeleton /> :
+        <MovieGrid 
+          movies={gridMovies} 
+          onSelectMovie={handleSelectMovie} 
+          favoriteIds={favoriteIds} 
+          onToggleFavorite={toggleFavorite} 
+          watchlistIds={watchlistIds} 
+          onToggleWatchlist={toggleWatchlist} 
+        />
+      }
+      <div ref={movieLoadMoreRef} className="h-10 flex justify-center items-center">
+        {isGridLoading && gridMovies.length > 0 && <Loader />}
       </div>
-    </>
+    </div>
   );
   
   const renderTvShowsPage = () => (
