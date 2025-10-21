@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
 // Define translations
@@ -53,7 +52,7 @@ const translations = {
     seasonsAndEpisodes: 'Seasons & Episodes',
     season: 'Season',
     episode: 'Episode',
-    tmdbAttribution: 'This product uses the TMDb API but is not endorsed or certified by TMDb.',
+    tmdbAttribution: '',
     errorOccurred: 'An error occurred',
     failedToLoadMovies: 'Failed to load movies. Please try again later.',
     failedToFetchDetails: 'Failed to fetch movie details',
@@ -132,7 +131,7 @@ const translations = {
     seasonsAndEpisodes: 'المواسم والحلقات',
     season: 'الموسم',
     episode: 'حلقة',
-    tmdbAttribution: 'هذا المنتج يستخدم واجهة برمجة تطبيقات TMDb ولكنه غير معتمد أو مصدق من قبل TMDb.',
+    tmdbAttribution: '',
     errorOccurred: 'حدث خطأ',
     failedToLoadMovies: 'فشل تحميل الأفلام. يرجى المحاولة مرة أخرى في وقت لاحق.',
     failedToFetchDetails: 'فشل في جلب تفاصيل الفيلم',

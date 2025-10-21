@@ -11,6 +11,8 @@ import { Header } from './components/Header';
 import { Loader } from './components/Loader';
 import { MovieDetailsModal } from './components/MovieDetailsModal';
 import { Footer } from './components/Footer';
+import { HeroSlider } from './components/HeroSlider';
+import { MovieSlider } from './components/MovieSlider';
 import { ScrollToTopButton } from './components/ScrollToTopButton';
 import { BottomNavBar } from './components/BottomNavBar';
 import { TvShowDetailsModal } from './components/TvShowDetailsModal';
@@ -18,16 +20,22 @@ import { useTranslation } from './contexts/LanguageContext';
 import { PersonDetailsModal } from './components/PersonDetailsModal';
 import { PersonDetailsModalSkeleton } from './components/PersonDetailsModalSkeleton';
 import { ListSubTabs } from './components/ListSubTabs';
+import { CategoryGridPage } from './components/CategoryGridPage';
 import { MovieGrid } from './components/MovieGrid';
 import { TvShowGrid } from './components/TvShowGrid';
+import { TvShowSlider } from './components/TvShowSlider';
+import { TvShowCategoryGridPage } from './components/TvShowCategoryGridPage';
 import { SearchBar } from './components/SearchBar';
-import { MovieListSkeleton } from './components/MovieListSkeleton';
+import { HeroSliderSkeleton } from './components/HeroSliderSkeleton';
+import { MovieSliderSkeleton } from './components/MovieSliderSkeleton';
+import { TvShowHeroSlider } from './components/TvShowHeroSlider';
 
 export type Theme = 'light' | 'dark';
 export type ActiveTab = 'movies' | 'tvshows' | 'search' | 'favorites' | 'watchlist' | 'trending' | 'live_broadcasts';
-
-const movieFetchers = [getPopularMovies, getTopRatedMovies, getNowPlayingMovies, getUpcomingMovies];
-const tvShowFetchers = [getPopularTvShows, getTopRatedTvShows, getAiringTodayTvShows];
+type ActiveView = 
+  | { type: 'main' }
+  | { type: 'view_all_movies'; title: string; fetcher: (page: number, language: string) => Promise<TmdbApiPopularResponse> }
+  | { type: 'view_all_tv'; title: string; fetcher: (page: number, language: string) => Promise<TmdbApiTvResponse> };
 
 function App() {
   const { language, t } = useTranslation();
@@ -42,27 +50,22 @@ function App() {
     return 'dark'; // Default to dark theme
   });
   const [activeTab, setActiveTab] = useState<ActiveTab>('movies');
+  const [activeView, setActiveView] = useState<ActiveView>({ type: 'main' });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Data State
+  const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
+  const [topRatedMovies, setTopRatedMovies] = useState<Movie[]>([]);
+  const [nowPlayingMovies, setNowPlayingMovies] = useState<Movie[]>([]);
+  const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([]);
   const [movieGenres, setMovieGenres] = useState<Genre[]>([]);
   const [tvGenres, setTvGenres] = useState<Genre[]>([]);
   
-  // Movie Page Grid State
-  const [gridMovies, setGridMovies] = useState<Movie[]>([]);
-  const [isGridLoading, setIsGridLoading] = useState(false);
-  const [moviePage, setMoviePage] = useState(1);
-  const [hasMoreMovies, setHasMoreMovies] = useState(true);
-  const movieObserver = useRef<IntersectionObserver | null>(null);
-
-  // TV Show Page Grid State
-  const [gridTvShows, setGridTvShows] = useState<TVShow[]>([]);
-  const [isTvGridLoading, setIsTvGridLoading] = useState(false);
-  const [tvShowPage, setTvShowPage] = useState(1);
-  const [hasMoreTvShows, setHasMoreTvShows] = useState(true);
-  const tvShowObserver = useRef<IntersectionObserver | null>(null);
-
+  const [popularTvShows, setPopularTvShows] = useState<TVShow[]>([]);
+  const [topRatedTvShows, setTopRatedTvShows] = useState<TVShow[]>([]);
+  const [airingTodayTvShows, setAiringTodayTvShows] = useState<TVShow[]>([]);
+  
   // Search Page State
   const [searchQuery, setSearchQuery] = useState('');
   const [searchedMovies, setSearchedMovies] = useState<Movie[]>([]);
@@ -116,12 +119,26 @@ function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const [movGenres, tvGen] = await Promise.all([
+      const [pop, top, now, upc, movGenres, tvGen, popTv, topTv, airTv] = await Promise.all([
+        getPopularMovies(1, language),
+        getTopRatedMovies(1, language),
+        getNowPlayingMovies(1, language),
+        getUpcomingMovies(1, language),
         getMovieGenres(language),
         getTvGenres(language),
+        getPopularTvShows(1, language),
+        getTopRatedTvShows(1, language),
+        getAiringTodayTvShows(1, language),
       ]);
+      setPopularMovies(pop.results);
+      setTopRatedMovies(top.results);
+      setNowPlayingMovies(now.results);
+      setUpcomingMovies(upc.results);
       setMovieGenres(movGenres.genres);
       setTvGenres(tvGen.genres);
+      setPopularTvShows(popTv.results);
+      setTopRatedTvShows(topTv.results);
+      setAiringTodayTvShows(airTv.results);
     } catch (err) {
       setError(t('failedToLoadMovies'));
       console.error(err);
@@ -133,90 +150,6 @@ function App() {
   useEffect(() => {
     fetchAllInitialData();
   }, [fetchAllInitialData]);
-
-    // Infinite Scroll Grid Loaders
-    const loadGridMovies = useCallback(async (page: number) => {
-      setIsGridLoading(true);
-      try {
-        const fetcherIndex = (page - 1) % movieFetchers.length;
-        const fetcherPage = Math.floor((page - 1) / movieFetchers.length) + 1;
-        const fetcher = movieFetchers[fetcherIndex];
-        
-        const data = await fetcher(fetcherPage, language);
-
-        setGridMovies(prev => page === 1 ? data.results : [...prev, ...data.results]);
-        if (fetcherPage >= data.total_pages && fetcherIndex === movieFetchers.length - 1) {
-            setHasMoreMovies(false);
-        }
-      } catch (err) {
-        setError(t('failedToLoadMovies'));
-      } finally {
-        setIsGridLoading(false);
-      }
-    }, [language, t]);
-  
-    const loadGridTvShows = useCallback(async (page: number) => {
-      setIsTvGridLoading(true);
-      try {
-        const fetcherIndex = (page - 1) % tvShowFetchers.length;
-        const fetcherPage = Math.floor((page - 1) / tvShowFetchers.length) + 1;
-        const fetcher = tvShowFetchers[fetcherIndex];
-
-        const data = await fetcher(fetcherPage, language);
-
-        setGridTvShows(prev => page === 1 ? data.results : [...prev, ...data.results]);
-        if (fetcherPage >= data.total_pages && fetcherIndex === tvShowFetchers.length - 1) {
-            setHasMoreTvShows(false);
-        }
-      } catch (err) {
-        setError(t('failedToLoadMovies'));
-      } finally {
-        setIsTvGridLoading(false);
-      }
-    }, [language, t]);
-  
-    useEffect(() => {
-      if (activeTab === 'movies' && gridMovies.length === 0) {
-        loadGridMovies(1);
-      }
-      if (activeTab === 'tvshows' && gridTvShows.length === 0) {
-        loadGridTvShows(1);
-      }
-    }, [activeTab, gridMovies.length, gridTvShows.length, loadGridMovies, loadGridTvShows]);
-  
-    useEffect(() => {
-      if (moviePage > 1) {
-        loadGridMovies(moviePage);
-      }
-    }, [moviePage, loadGridMovies]);
-  
-    useEffect(() => {
-      if (tvShowPage > 1) {
-        loadGridTvShows(tvShowPage);
-      }
-    }, [tvShowPage, loadGridTvShows]);
-  
-    const movieLoadMoreRef = useCallback(node => {
-      if (isGridLoading) return;
-      if (movieObserver.current) movieObserver.current.disconnect();
-      movieObserver.current = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && hasMoreMovies) {
-          setMoviePage(prev => prev + 1);
-        }
-      });
-      if (node) movieObserver.current.observe(node);
-    }, [isGridLoading, hasMoreMovies]);
-  
-    const tvShowLoadMoreRef = useCallback(node => {
-      if (isTvGridLoading) return;
-      if (tvShowObserver.current) tvShowObserver.current.disconnect();
-      tvShowObserver.current = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && hasMoreTvShows) {
-          setTvShowPage(prev => prev + 1);
-        }
-      });
-      if (node) tvShowObserver.current.observe(node);
-    }, [isTvGridLoading, hasMoreTvShows]);
 
   // Search effect with debounce
   useEffect(() => {
@@ -284,16 +217,27 @@ function App() {
     }
   }, [activeTab, favoriteIds, watchlistIds, favoriteTvShowIds, watchlistTvShowIds, language, t]);
 
-  // Reset search when leaving search tab
+  // Reset search and view all when leaving search tab
   useEffect(() => {
     if (activeTab !== 'search') {
       setSearchQuery('');
       setSearchedMovies([]);
       setSearchedTvShows([]);
     }
+     if (activeTab !== 'movies' && activeTab !== 'tvshows') {
+      setActiveView({ type: 'main' });
+    }
   }, [activeTab]);
 
   // --- Handlers ---
+  const handleViewAllMovies = (title: string, fetcher: (page: number, language: string) => Promise<TmdbApiPopularResponse>) => {
+    setActiveView({ type: 'view_all_movies', title, fetcher });
+  };
+  const handleViewAllTvShows = (title: string, fetcher: (page: number, language: string) => Promise<TmdbApiTvResponse>) => {
+    setActiveView({ type: 'view_all_tv', title, fetcher });
+  };
+  const handleBackFromViewAll = () => setActiveView({ type: 'main' });
+
   const toggleFavorite = (movie: Movie) => {
     const newFavorites = new Set(favoriteIds);
     if (newFavorites.has(movie.id)) newFavorites.delete(movie.id); else newFavorites.add(movie.id);
@@ -329,13 +273,13 @@ function App() {
     }
   };
 
-  const handleSelectTvShow = async (tvShow: TVShow) => {
+  const handleSelectTvShow = async (tvShow: TVShow, options?: { playTrailer: boolean }) => {
     try {
       const details = await getTvShowDetails(tvShow.id, language);
-      setSelectedTvShow(details);
+      setSelectedTvShow({ ...details, playOnMount: options?.playTrailer });
     } catch(err) {
       setError(t('failedToFetchDetails'));
-      setSelectedTvShow(tvShow); 
+      setSelectedTvShow({ ...tvShow, playOnMount: options?.playTrailer }); 
     }
   };
   
@@ -369,16 +313,15 @@ function App() {
     setIsSurpriseLoading(true);
     setError(null);
     try {
-      // Fetch the first page to get total_pages
       const initialData = await getPopularMovies(1, language);
-      const totalPages = Math.min(initialData.total_pages, 500); // TMDB recommends not going over 500
+      const totalPages = Math.min(initialData.total_pages, 500);
       const randomPage = Math.floor(Math.random() * totalPages) + 1;
       
       const data = await getPopularMovies(randomPage, language);
       if (data.results.length > 0) {
         const randomIndex = Math.floor(Math.random() * data.results.length);
         const randomMovie = data.results[randomIndex];
-        await handleSelectMovie(randomMovie);
+        await handleSelectMovie(randomMovie, { playTrailer: true });
       } else {
         setError(t('couldNotFetchRandom'));
       }
@@ -391,43 +334,72 @@ function App() {
   };
 
   // --- Content Rendering ---
-  const renderMoviesPage = () => (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28">
-      <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6">{t('movies')}</h2>
-      { (isGridLoading && gridMovies.length === 0) ? <MovieListSkeleton /> :
-        <MovieGrid 
-          movies={gridMovies} 
-          onSelectMovie={handleSelectMovie} 
-          favoriteIds={favoriteIds} 
-          onToggleFavorite={toggleFavorite} 
-          watchlistIds={watchlistIds} 
-          onToggleWatchlist={toggleWatchlist} 
-        />
-      }
-      <div ref={movieLoadMoreRef} className="h-10 flex justify-center items-center">
-        {isGridLoading && gridMovies.length > 0 && <Loader />}
-      </div>
-    </div>
-  );
-  
-  const renderTvShowsPage = () => (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28">
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6">{t('tvShows')}</h2>
-        { (isTvGridLoading && gridTvShows.length === 0) ? <MovieListSkeleton /> :
-          <TvShowGrid 
-            tvShows={gridTvShows} 
-            onSelectTvShow={handleSelectTvShow} 
-            favoriteIds={favoriteTvShowIds} 
-            onToggleFavorite={toggleFavoriteTvShow} 
-            watchlistIds={watchlistTvShowIds} 
-            onToggleWatchlist={toggleWatchlistTvShow} 
-          />
-        }
-        <div ref={tvShowLoadMoreRef} className="h-10 flex justify-center items-center">
-          {isTvGridLoading && gridTvShows.length > 0 && <Loader />}
+  const renderMoviesPage = () => {
+    if (activeView.type === 'view_all_movies') {
+        return (
+             <div className="pt-28">
+                <CategoryGridPage
+                    title={activeView.title}
+                    fetcher={activeView.fetcher}
+                    onBack={handleBackFromViewAll}
+                    onSelectMovie={handleSelectMovie}
+                    favoriteIds={favoriteIds}
+                    onToggleFavorite={toggleFavorite}
+                    watchlistIds={watchlistIds}
+                    onToggleWatchlist={toggleWatchlist}
+                />
+            </div>
+        );
+    }
+    
+    return (
+        <>
+        {isLoading ? <HeroSliderSkeleton /> : <HeroSlider movies={nowPlayingMovies} onSelectMovie={handleSelectMovie} />}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            {isLoading ? <MovieSliderSkeleton /> : (
+                <>
+                    <MovieSlider title={t('popular')} movies={popularMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} onViewAll={() => handleViewAllMovies(t('popular'), getPopularMovies)} />
+                    <MovieSlider title={t('topRated')} movies={topRatedMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} onViewAll={() => handleViewAllMovies(t('topRated'), getTopRatedMovies)} />
+                    <MovieSlider title={t('upcoming')} movies={upcomingMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} onViewAll={() => handleViewAllMovies(t('upcoming'), getUpcomingMovies)} />
+                </>
+            )}
         </div>
-    </div>
-  );
+        </>
+    );
+  };
+  
+  const renderTvShowsPage = () => {
+     if (activeView.type === 'view_all_tv') {
+        return (
+             <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28">
+                <TvShowCategoryGridPage
+                    title={activeView.title}
+                    fetcher={activeView.fetcher}
+                    onBack={handleBackFromViewAll}
+                    onSelectTvShow={handleSelectTvShow}
+                    favoriteIds={favoriteTvShowIds}
+                    onToggleFavorite={toggleFavoriteTvShow}
+                    watchlistIds={watchlistTvShowIds}
+                    onToggleWatchlist={toggleWatchlistTvShow}
+                />
+            </div>
+        );
+    }
+
+    return (
+        <>
+            {isLoading ? <HeroSliderSkeleton /> : <TvShowHeroSlider tvShows={airingTodayTvShows} onSelectTvShow={handleSelectTvShow} />}
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-12 mt-12">
+                {isLoading ? <MovieSliderSkeleton /> : (
+                    <>
+                        <TvShowSlider title={t('popularTvShows')} tvShows={popularTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} onViewAll={() => handleViewAllTvShows(t('popularTvShows'), getPopularTvShows)} />
+                        <TvShowSlider title={t('topRatedTvShows')} tvShows={topRatedTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} onViewAll={() => handleViewAllTvShows(t('topRatedTvShows'), getTopRatedTvShows)} />
+                    </>
+                )}
+            </div>
+        </>
+    );
+  };
 
   const renderSearchPage = () => {
     const noResults = !isSearching && searchQuery.trim().length > 1 && searchedMovies.length === 0 && searchedTvShows.length === 0;
@@ -556,6 +528,7 @@ function App() {
           onToggleWatchlist={toggleWatchlistTvShow}
           onSelectSimilarTvShow={handleSelectSimilarTvShow}
           onSelectPerson={handleSelectPerson}
+          playOnMount={selectedTvShow.playOnMount}
         />
       )}
       

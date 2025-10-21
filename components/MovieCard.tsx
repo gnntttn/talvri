@@ -37,6 +37,12 @@ const StarIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
+const PlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.647c1.295.742 1.295 2.545 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
+    </svg>
+);
+
 
 export const MovieCard: React.FC<MovieCardProps> = ({ movie, onSelectMovie, isFavorite, onToggleFavorite, isWatchlisted, onToggleWatchlist }) => {
   const { t } = useTranslation();
@@ -68,6 +74,19 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, onSelectMovie, isFa
                 className={`w-5 h-5 transition-colors ${isFavorite ? 'text-red-500' : ''}`}
             />
         </button>
+        
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectMovie(movie, { playTrailer: true });
+                }}
+                className="w-14 h-14 rounded-full bg-violet-600/80 text-white flex items-center justify-center hover:bg-violet-500 transition-all duration-300 transform group-hover:scale-100 scale-75"
+                aria-label={t('playTrailer')}
+            >
+                <PlayIcon className="w-8 h-8 ml-1" />
+            </button>
+        </div>
 
         {imageUrl ? (
             <img 

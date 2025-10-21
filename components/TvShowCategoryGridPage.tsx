@@ -10,7 +10,7 @@ interface TvShowCategoryGridPageProps {
   title: string;
   fetcher: (page: number, language: string) => Promise<TmdbApiTvResponse>;
   onBack: () => void;
-  onSelectTvShow: (tvShow: TVShow) => void;
+  onSelectTvShow: (tvShow: TVShow, options?: { playTrailer: boolean }) => void;
   favoriteIds: Set<number>;
   onToggleFavorite: (tvShow: TVShow) => void;
   watchlistIds: Set<number>;

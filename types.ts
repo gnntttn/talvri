@@ -36,6 +36,7 @@ export interface TVShow {
   credits?: CreditsResponse;
   reviews?: MovieReviewsResponse; // Re-using, API structure is similar
   popularity: number;
+  playOnMount?: boolean;
 }
 
 

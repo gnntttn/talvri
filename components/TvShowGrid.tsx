@@ -5,7 +5,7 @@ import { TvShowCard } from './TvShowCard';
 
 interface TvShowGridProps {
   tvShows: TVShow[];
-  onSelectTvShow: (tvShow: TVShow) => void;
+  onSelectTvShow: (tvShow: TVShow, options?: { playTrailer: boolean }) => void;
   favoriteIds: Set<number>;
   onToggleFavorite: (tvShow: TVShow) => void;
   watchlistIds: Set<number>;

@@ -6,7 +6,7 @@ import { useTranslation } from '../contexts/LanguageContext';
 
 interface TvShowCardProps {
   tvShow: TVShow;
-  onSelectTvShow: (tvShow: TVShow) => void;
+  onSelectTvShow: (tvShow: TVShow, options?: { playTrailer: boolean }) => void;
   isFavorite: boolean;
   onToggleFavorite: (tvShow: TVShow) => void;
   isWatchlisted: boolean;
@@ -20,20 +20,26 @@ const StarIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 const HeartIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={1.5} {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M11.645 20.91a.75.75 0 0 1-1.29 0C8.631 18.7 2.25 12.553 2.25 8.517 2.25 5.42 4.887 3 7.875 3c1.725 0 3.323.805 4.125 2.088C12.823 3.805 14.42 3 16.125 3c2.988 0 5.625 2.42 5.625 5.517 0 4.036-6.382 10.183-8.135 12.393Z" />
     </svg>
 );
 
 const BookmarkIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={1.5} {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
     </svg>
 );
 
 const PlaceholderIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.158 0a.079.079 0 1 1-.158 0 .079.079 0 0 1 .158 0Z" />
+    </svg>
+);
+
+const PlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.647c1.295.742 1.295 2.545 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
     </svg>
 );
 
@@ -45,38 +51,38 @@ export const TvShowCard: React.FC<TvShowCardProps> = ({ tvShow, onSelectTvShow, 
 
   return (
     <div 
-        className="group relative cursor-pointer overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
-        onClick={() => onSelectTvShow(tvShow)}
+        className="group relative cursor-pointer overflow-hidden rounded-xl shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-violet-800/20 hover:-translate-y-1 bg-slate-800"
+        onClick={() => onSelectTvShow(tvShow, { playTrailer: false })}
         aria-label={t('viewDetailsFor', { title: tvShow.name })}
     >
         <button 
-            onClick={(e) => {
-                e.stopPropagation();
-                onToggleWatchlist(tvShow);
-            }}
-            className="absolute top-2 left-2 rtl:left-auto rtl:right-2 z-20 p-2 rounded-full bg-black/40 text-white/80 hover:bg-black/60 hover:text-white transition-all duration-200"
+            onClick={(e) => { e.stopPropagation(); onToggleWatchlist(tvShow); }}
+            className="absolute top-3 left-3 rtl:left-auto rtl:right-3 z-20 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-sm text-white/80 hover:bg-black/70 hover:text-white transition-all duration-200"
             aria-label={isWatchlisted ? t('removeFromWatchlist', { title: tvShow.name }) : t('addToWatchlist', { title: tvShow.name })}
         >
-            <BookmarkIcon
-                className={`w-6 h-6 transition-colors`}
-                fill={isWatchlisted ? 'currentColor' : 'none'}
-                stroke={isWatchlisted ? 'currentColor' : 'white'}
-            />
+            <BookmarkIcon className={`w-5 h-5 transition-colors ${isWatchlisted ? 'text-violet-400' : ''}`} />
         </button>
         <button 
-            onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite(tvShow);
-            }}
-            className="absolute top-2 right-2 rtl:right-auto rtl:left-2 z-20 p-2 rounded-full bg-black/40 text-white/80 hover:bg-black/60 hover:text-white transition-all duration-200"
+            onClick={(e) => { e.stopPropagation(); onToggleFavorite(tvShow); }}
+            className="absolute top-3 right-3 rtl:right-auto rtl:left-3 z-20 w-8 h-8 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-sm text-white/80 hover:bg-black/70 hover:text-white transition-all duration-200"
             aria-label={isFavorite ? t('removeFromFavorites', { title: tvShow.name }) : t('addToFavorites', { title: tvShow.name })}
         >
-            <HeartIcon 
-                className={`w-6 h-6 transition-colors`}
-                fill={isFavorite ? 'currentColor' : 'none'}
-                stroke={isFavorite ? 'currentColor': 'white'}
-            />
+            <HeartIcon className={`w-5 h-5 transition-colors ${isFavorite ? 'text-red-500' : ''}`} />
         </button>
+
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectTvShow(tvShow, { playTrailer: true });
+                }}
+                className="w-14 h-14 rounded-full bg-violet-600/80 text-white flex items-center justify-center hover:bg-violet-500 transition-all duration-300 transform group-hover:scale-100 scale-75"
+                aria-label={t('playTrailer')}
+            >
+                <PlayIcon className="w-8 h-8 ml-1" />
+            </button>
+        </div>
+        
         {imageUrl ? (
             <img 
                 src={imageUrl} 
@@ -84,15 +90,15 @@ export const TvShowCard: React.FC<TvShowCardProps> = ({ tvShow, onSelectTvShow, 
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
         ) : (
-            <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
-                <PlaceholderIcon className="w-16 h-16 text-slate-400 dark:text-slate-600"/>
+            <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                <PlaceholderIcon className="w-16 h-16 text-slate-600"/>
             </div>
         )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      <div className="absolute bottom-0 left-0 rtl:right-0 p-4 w-full text-left rtl:text-right">
-        <h3 className="text-white text-base sm:text-lg font-bold leading-tight">{tvShow.name}</h3>
+
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 text-left rtl:text-right">
+        <h3 className="text-white text-base font-bold leading-tight truncate">{tvShow.name}</h3>
         <div className="flex items-center mt-1">
-          <StarIcon className="w-5 h-5 text-yellow-400" />
+          <StarIcon className="w-4 h-4 text-yellow-400" />
           <span className="text-white ml-1 rtl:mr-1 rtl:ml-0 font-semibold text-sm">{(tvShow.vote_average || 0).toFixed(1)}</span>
         </div>
       </div>

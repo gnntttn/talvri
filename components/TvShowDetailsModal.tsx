@@ -15,6 +15,7 @@ interface TvShowDetailsModalProps {
   onToggleWatchlist: (tvShow: TVShow) => void;
   onSelectSimilarTvShow: (tvShow: TVShow) => void;
   onSelectPerson: (personId: number) => void;
+  playOnMount?: boolean;
 }
 
 const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -204,7 +205,7 @@ const EpisodeCard: React.FC<{ episode: Episode }> = ({ episode }) => {
 };
 
 
-export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, onClose, isFavorite, onToggleFavorite, isWatchlisted, onToggleWatchlist, onSelectSimilarTvShow, onSelectPerson }) => {
+export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, onClose, isFavorite, onToggleFavorite, isWatchlisted, onToggleWatchlist, onSelectSimilarTvShow, onSelectPerson, playOnMount = false }) => {
   const { language, t } = useTranslation();
   const backdropUrl = tvShow.backdrop_path
     ? `${TMDB_IMAGE_BASE_URL}/w1280${tvShow.backdrop_path}`
@@ -236,6 +237,12 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
     }
     onClose();
   };
+  
+  useEffect(() => {
+    if (playOnMount && trailer) {
+        setShowTrailer(true);
+    }
+  }, [playOnMount, trailer]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -250,7 +257,9 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
     window.addEventListener('keydown', handleEsc);
     document.body.style.overflow = 'hidden';
 
-    setShowTrailer(false);
+    if (!playOnMount) {
+        setShowTrailer(false);
+    }
     setSelectedSeasonNumber(null);
     setSeasonDetails(null);
 
@@ -283,7 +292,7 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
       window.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = 'auto';
     };
-  }, [onClose, tvShow.id, language]);
+  }, [onClose, tvShow.id, language, playOnMount]);
 
   useEffect(() => {
     if (selectedSeasonNumber === null) return;
