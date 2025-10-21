@@ -1,39 +1,32 @@
+
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
 // Define translations
 const translations = {
   en: {
-    // Header
     appName: 'talvri',
-    surpriseMe: 'Surprise Me',
-    // Bottom Nav
-    home: 'Home',
+    searchPlaceholder: 'Search for movies & tv shows...',
     movies: 'Movies',
     tvShows: 'TV Shows',
+    home: 'Home',
     search: 'Search',
     watchlist: 'Watchlist',
     favorites: 'Favorites',
-    // Movie Sliders / Categories
     popular: 'Popular',
     topRated: 'Top Rated',
     nowPlaying: 'Now Playing',
     upcoming: 'Upcoming',
-    // TV Show Sliders
     popularTvShows: 'Popular TV Shows',
     topRatedTvShows: 'Top Rated TV Shows',
     airingToday: 'Airing Today',
     viewAll: 'View All',
-    // Search
-    searchPlaceholder: 'Search for a movie...',
     noMoviesFound: 'No movies found for "{searchTerm}". Try adjusting your search or filters.',
-    // My Lists
     myFavorites: 'My Favorites',
     myWatchlist: 'My Watchlist',
     noFavorites: "You haven't added any favorites yet.",
     emptyWatchlist: 'Your watchlist is empty.',
     noFavoriteTvShows: "You haven't added any favorite TV shows yet.",
     emptyTvShowWatchlist: 'Your TV show watchlist is empty.',
-    // Search Filters
     genre: 'Genre',
     allGenres: 'All Genres',
     releaseYear: 'Release Year',
@@ -41,7 +34,6 @@ const translations = {
     minRating: 'Min. Rating: {rating} ★',
     anyRating: 'Min. Rating: Any',
     resetFilters: 'Reset Filters',
-    // Movie Details
     whereToWatch: 'Where to Watch',
     stream: 'Stream',
     buy: 'Buy',
@@ -58,15 +50,15 @@ const translations = {
     noReviewsFound: 'No reviews found for this movie yet.',
     readMore: 'Read More',
     showLess: 'Show Less',
-    // Footer
-    tmdbAttribution: 'This product uses the TMDB API but is not endorsed or certified by TMDB.',
-    // Errors
+    seasonsAndEpisodes: 'Seasons & Episodes',
+    season: 'Season',
+    episode: 'Episode',
+    tmdbAttribution: 'This product uses the TMDb API but is not endorsed or certified by TMDb.',
     errorOccurred: 'An error occurred',
     failedToLoadMovies: 'Failed to load movies. Please try again later.',
     failedToFetchDetails: 'Failed to fetch movie details',
     couldNotFetchRandom: 'Could not fetch a random movie. Please try again later.',
     failedToFetchList: 'Failed to fetch movies from your list.',
-    // ARIA labels
     viewDetailsFor: 'View details for {title}',
     addToWatchlist: 'Add {title} to watchlist',
     removeFromWatchlist: 'Remove {title} from watchlist',
@@ -77,19 +69,25 @@ const translations = {
     goToTop: 'Go to top',
     playTrailer: 'Play trailer',
     viewDetails: 'View Details',
-    // Person Details
     biography: 'Biography',
     knownFor: 'Known For',
     born: 'Born',
     died: 'Died',
     placeOfBirth: 'Place of Birth',
+    // Fix: Add missing translation keys.
+    watchNow: 'Watch Now',
+    browse: 'Browse',
+    trending: 'Trending',
+    liveBroadcasts: 'Live Broadcasts',
+    menu: 'Menu',
+    surpriseMe: 'Surprise Me',
   },
   ar: {
     appName: 'talvri',
-    surpriseMe: 'فاجئني',
-    home: 'الرئيسية',
+    searchPlaceholder: 'ابحث عن أفلام ومسلسلات...',
     movies: 'أفلام',
     tvShows: 'مسلسلات',
+    home: 'الرئيسية',
     search: 'بحث',
     watchlist: 'قائمة المشاهدة',
     favorites: 'المفضلة',
@@ -101,7 +99,6 @@ const translations = {
     topRatedTvShows: 'الأعلى تقييماً',
     airingToday: 'يعرض اليوم',
     viewAll: 'عرض الكل',
-    searchPlaceholder: 'ابحث عن فيلم...',
     noMoviesFound: 'لم يتم العثور على أفلام لـ "{searchTerm}". حاول تعديل بحثك أو الفلاتر.',
     myFavorites: 'أفلامي المفضلة',
     myWatchlist: 'قائمة المشاهدة الخاصة بي',
@@ -132,7 +129,10 @@ const translations = {
     noReviewsFound: 'لا توجد مراجعات لهذا الفيلم بعد.',
     readMore: 'اقرأ المزيد',
     showLess: 'عرض أقل',
-    tmdbAttribution: 'هذا المنتج يستخدم واجهة برمجة تطبيقات TMDB ولكنه غير معتمد أو مصدق من TMDB.',
+    seasonsAndEpisodes: 'المواسم والحلقات',
+    season: 'الموسم',
+    episode: 'حلقة',
+    tmdbAttribution: 'هذا المنتج يستخدم واجهة برمجة تطبيقات TMDb ولكنه غير معتمد أو مصدق من قبل TMDb.',
     errorOccurred: 'حدث خطأ',
     failedToLoadMovies: 'فشل تحميل الأفلام. يرجى المحاولة مرة أخرى في وقت لاحق.',
     failedToFetchDetails: 'فشل في جلب تفاصيل الفيلم',
@@ -148,12 +148,18 @@ const translations = {
     goToTop: 'اذهب للأعلى',
     playTrailer: 'تشغيل المقطع الدعائي',
     viewDetails: 'عرض التفاصيل',
-    // Person Details
     biography: 'السيرة الذاتية',
     knownFor: 'أشهر الأعمال',
     born: 'الميلاد',
     died: 'الوفاة',
     placeOfBirth: 'مكان الميلاد',
+    // Fix: Add missing translation keys.
+    watchNow: 'شاهد الآن',
+    browse: 'تصفح',
+    trending: 'شائع',
+    liveBroadcasts: 'بث مباشر',
+    menu: 'القائمة',
+    surpriseMe: 'فاجئني',
   }
 };
 
@@ -174,7 +180,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const storedLang = window.localStorage.getItem('language');
       if (storedLang === 'ar' || storedLang === 'en') return storedLang;
     }
-    // Default to browser language if it's Arabic, otherwise English
     if (typeof window !== 'undefined' && navigator.language.startsWith('ar')) {
         return 'ar';
     }

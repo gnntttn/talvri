@@ -1,6 +1,6 @@
 
 import { TMDB_API_KEY, TMDB_BASE_URL } from '../constants';
-import type { Movie, TmdbApiPopularResponse, Genre, PersonDetails, PersonMovieCreditsResponse, TVShow, TmdbApiTvResponse } from '../types';
+import type { Movie, TmdbApiPopularResponse, Genre, PersonDetails, PersonMovieCreditsResponse, TVShow, TmdbApiTvResponse, SeasonDetails } from '../types';
 
 const fetchFromTmdb = async <T,>(endpoint: string, language: string = 'en-US'): Promise<T> => {
   const separator = endpoint.includes('?') ? '&' : '?';
@@ -49,6 +49,10 @@ export const discoverMovies = async (genreId: number, page: number = 1, language
   return fetchFromTmdb<TmdbApiPopularResponse>(`discover/movie?sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&with_genres=${genreId}`, language);
 };
 
+export const discoverTvShows = async (genreId: number, page: number = 1, language: string): Promise<TmdbApiTvResponse> => {
+    return fetchFromTmdb<TmdbApiTvResponse>(`discover/tv?sort_by=popularity.desc&page=${page}&with_genres=${genreId}`, language);
+};
+
 export const getSimilarMovies = async (movieId: number, page: number = 1, language: string): Promise<TmdbApiPopularResponse> => {
   return fetchFromTmdb<TmdbApiPopularResponse>(`movie/${movieId}/similar?page=${page}`, language);
 };
@@ -84,4 +88,12 @@ export const searchTvShows = async (query: string, page: number = 1, language: s
 
 export const getSimilarTvShows = async (tvId: number, page: number = 1, language: string): Promise<TmdbApiTvResponse> => {
   return fetchFromTmdb<TmdbApiTvResponse>(`tv/${tvId}/similar?page=${page}`, language);
+};
+
+export const getTvShowSeasonDetails = async (tvId: number, seasonNumber: number, language: string): Promise<SeasonDetails> => {
+    return fetchFromTmdb<SeasonDetails>(`tv/${tvId}/season/${seasonNumber}`, language);
+};
+
+export const getTrendingAllWeek = async (page: number = 1, language: string): Promise<TmdbApiPopularResponse> => {
+  return fetchFromTmdb<TmdbApiPopularResponse>(`trending/all/week?page=${page}`, language);
 };

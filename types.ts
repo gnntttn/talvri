@@ -15,6 +15,8 @@ export interface Movie {
   credits?: CreditsResponse;
   reviews?: MovieReviewsResponse;
   popularity: number;
+  // Fix: Add playOnMount to allow tracking if a trailer should play on mount.
+  playOnMount?: boolean;
 }
 
 export interface TVShow {
@@ -27,6 +29,7 @@ export interface TVShow {
   vote_average: number;
   genre_ids: number[];
   genres?: Genre[];
+  seasons?: Season[];
   // Appended data
   videos?: { results: Video[] };
   ['watch/providers']?: WatchProviderResponse;
@@ -142,4 +145,29 @@ export interface MovieReviewsResponse {
   results: Review[];
   total_pages: number;
   total_results: number;
+}
+
+export interface Episode {
+  id: number;
+  name: string;
+  overview: string;
+  still_path: string | null;
+  episode_number: number;
+  season_number: number;
+  air_date: string;
+  vote_average: number;
+}
+
+export interface Season {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  season_number: number;
+  episode_count: number;
+  air_date: string;
+}
+
+export interface SeasonDetails extends Season {
+  episodes: Episode[];
 }

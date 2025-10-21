@@ -14,6 +14,7 @@ interface MovieDetailsModalProps {
   onToggleWatchlist: (movie: Movie) => void;
   onSelectSimilarMovie: (movie: Movie) => void;
   onSelectPerson: (personId: number) => void;
+  playOnMount?: boolean;
 }
 
 const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -157,7 +158,7 @@ const ReviewCard: React.FC<{ review: Review }> = ({ review }) => {
 };
 
 
-export const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({ movie, onClose, isFavorite, onToggleFavorite, isWatchlisted, onToggleWatchlist, onSelectSimilarMovie, onSelectPerson }) => {
+export const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({ movie, onClose, isFavorite, onToggleFavorite, isWatchlisted, onToggleWatchlist, onSelectSimilarMovie, onSelectPerson, playOnMount = false }) => {
   const { language, t } = useTranslation();
   const backdropUrl = movie.backdrop_path
     ? `${TMDB_IMAGE_BASE_URL}/w1280${movie.backdrop_path}`
@@ -186,6 +187,12 @@ export const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({ movie, onC
     }
     onClose();
   };
+  
+  useEffect(() => {
+    if (playOnMount && trailer) {
+        setShowTrailer(true);
+    }
+  }, [playOnMount, trailer]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -201,7 +208,9 @@ export const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({ movie, onC
     document.body.style.overflow = 'hidden';
 
     // Reset trailer state when movie changes
-    setShowTrailer(false);
+    if (!playOnMount) {
+        setShowTrailer(false);
+    }
 
     const fetchSimilar = async () => {
         try {
@@ -218,7 +227,7 @@ export const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({ movie, onC
       window.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = 'auto';
     };
-  }, [onClose, movie.id, language]);
+  }, [onClose, movie.id, language, playOnMount]);
 
   return (
     <>

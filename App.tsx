@@ -1,99 +1,90 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Movie, Genre, TmdbApiPopularResponse, PersonDetails, TVShow, TmdbApiTvResponse } from './types';
-import { getPopularMovies, searchMovies, getMovieDetails, getMovieGenres, getTopRatedMovies, getNowPlayingMovies, getUpcomingMovies, getPersonDetails, getPersonMovieCredits, getPopularTvShows, getTopRatedTvShows, getAiringTodayTvShows, getTvShowDetails, getSimilarTvShows } from './services/tmdbService';
+import { 
+  getPopularMovies, searchMovies, getMovieDetails, getMovieGenres, getTvGenres, 
+  getTopRatedMovies, getNowPlayingMovies, getUpcomingMovies, getPersonDetails, 
+  getPersonMovieCredits, getPopularTvShows, getTopRatedTvShows, getAiringTodayTvShows, 
+  getTvShowDetails, discoverMovies, searchTvShows
+} from './services/tmdbService';
 import { Header } from './components/Header';
-import { MovieGrid } from './components/MovieGrid';
 import { Loader } from './components/Loader';
 import { MovieDetailsModal } from './components/MovieDetailsModal';
 import { Footer } from './components/Footer';
-import { MovieGridSkeleton } from './components/MovieGridSkeleton';
 import { ScrollToTopButton } from './components/ScrollToTopButton';
-import { SearchFilters } from './components/SearchFilters';
 import { BottomNavBar } from './components/BottomNavBar';
-import { MovieSlider } from './components/MovieSlider';
-import { MovieSliderSkeleton } from './components/MovieSliderSkeleton';
-import { SearchBar } from './components/SearchBar';
+import { TvShowDetailsModal } from './components/TvShowDetailsModal';
 import { useTranslation } from './contexts/LanguageContext';
-import { CategoryGridPage } from './components/CategoryGridPage';
-import { HeroSlider } from './components/HeroSlider';
-import { HeroSliderSkeleton } from './components/HeroSliderSkeleton';
 import { PersonDetailsModal } from './components/PersonDetailsModal';
 import { PersonDetailsModalSkeleton } from './components/PersonDetailsModalSkeleton';
-import { TvShowSlider } from './components/TvShowSlider';
-import { TvShowDetailsModal } from './components/TvShowDetailsModal';
-import { DesktopNav } from './components/DesktopNav';
+import { CategoryGridPage } from './components/CategoryGridPage';
 import { TvShowCategoryGridPage } from './components/TvShowCategoryGridPage';
 import { ListSubTabs } from './components/ListSubTabs';
+import { MovieGrid } from './components/MovieGrid';
 import { TvShowGrid } from './components/TvShowGrid';
-
+import { HeroSlider } from './components/HeroSlider';
+import { SearchBar } from './components/SearchBar';
+import { InfiniteMovieSection } from './components/InfiniteMovieSection';
+import { InfiniteTvShowSection } from './components/InfiniteTvShowSection';
 
 export type Theme = 'light' | 'dark';
-export type ActiveTab = 'movies' | 'tvshows' | 'search' | 'favorites' | 'watchlist';
+// Fix: Export the ActiveTab type so it can be imported by other components and add new tabs.
+export type ActiveTab = 'movies' | 'tvshows' | 'search' | 'favorites' | 'watchlist' | 'trending' | 'live_broadcasts';
+type ActiveView = 'home' | 'movies_category' | 'tv_category';
 
 function App() {
   const { language, t } = useTranslation();
-
+  
+  // UI State
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== 'undefined' && window.localStorage) {
       const storedTheme = window.localStorage.getItem('theme');
       if (storedTheme === 'light' || storedTheme === 'dark') return storedTheme;
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
     }
-    return 'light';
+    return 'dark'; // Default to dark theme
   });
-
-  // Movies screen state
-  const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
-  const [topRatedMovies, setTopRatedMovies] = useState<Movie[]>([]);
-  const [nowPlayingMovies, setNowPlayingMovies] = useState<Movie[]>([]);
-  const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([]);
-  const [isMoviesLoading, setIsMoviesLoading] = useState(true);
-  const [categoryView, setCategoryView] = useState<{
-    title: string;
-    fetcher: (page: number, language: string) => Promise<TmdbApiPopularResponse>;
-  } | null>(null);
-
-  // TV Shows screen state
-  const [popularTvShows, setPopularTvShows] = useState<TVShow[]>([]);
-  const [topRatedTvShows, setTopRatedTvShows] = useState<TVShow[]>([]);
-  const [airingTodayTvShows, setAiringTodayTvShows] = useState<TVShow[]>([]);
-  const [isTvShowsLoading, setIsTvShowsLoading] = useState(true);
-  const [tvCategoryView, setTvCategoryView] = useState<{
-    title: string;
-    fetcher: (page: number, language: string) => Promise<TmdbApiTvResponse>;
-  } | null>(null);
-  
-  // Search screen state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<Movie[]>([]);
-  const [isSearchLoading, setIsSearchLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  
-  // General state
+  const [activeTab, setActiveTab] = useState<ActiveTab>('movies');
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Data State
+  const [movieGenres, setMovieGenres] = useState<Genre[]>([]);
+  const [tvGenres, setTvGenres] = useState<Genre[]>([]);
+  
+  // Movie Page State (only for Hero Slider)
+  const [nowPlayingMovies, setNowPlayingMovies] = useState<Movie[]>([]);
+
+  // Search Page State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchedMovies, setSearchedMovies] = useState<Movie[]>([]);
+  const [searchedTvShows, setSearchedTvShows] = useState<TVShow[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  
+  // Modal State
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedTvShow, setSelectedTvShow] = useState<TVShow | null>(null);
-  const [genres, setGenres] = useState<Genre[]>([]);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('movies');
-  const [listSubTab, setListSubTab] = useState<'movies' | 'tvshows'>('movies');
-  
-  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
-  const [watchlistIds, setWatchlistIds] = useState<Set<number>>(new Set());
-
-  const [favoriteTvShowIds, setFavoriteTvShowIds] = useState<Set<number>>(new Set());
-  const [watchlistTvShowIds, setWatchlistTvShowIds] = useState<Set<number>>(new Set());
-  
-  const [filterGenre, setFilterGenre] = useState<number | null>(null);
-  const [filterYear, setFilterYear] = useState<number | null>(null);
-  const [filterRating, setFilterRating] = useState<number | null>(null);
-
-  // Person Details State
   const [personDetails, setPersonDetails] = useState<(PersonDetails & { movies: Movie[] }) | null>(null);
   const [isPersonLoading, setIsPersonLoading] = useState(false);
+  const [isSurpriseLoading, setIsSurpriseLoading] = useState(false);
 
-  const observer = useRef<IntersectionObserver | null>(null);
-  const debounceTimeoutRef = useRef<number | null>(null);
+  // User Lists State (Favorites, Watchlist)
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [watchlistIds, setWatchlistIds] = useState<Set<number>>(new Set());
+  const [favoriteMovies, setFavoriteMovies] = useState<Movie[]>([]);
+  const [watchlistMovies, setWatchlistMovies] = useState<Movie[]>([]);
+  const [favoriteTvShowIds, setFavoriteTvShowIds] = useState<Set<number>>(new Set());
+  const [watchlistTvShowIds, setWatchlistTvShowIds] = useState<Set<number>>(new Set());
+  const [favoriteTvShows, setFavoriteTvShows] = useState<TVShow[]>([]);
+  const [watchlistTvShows, setWatchlistTvShows] = useState<TVShow[]>([]);
+  const [activeListSubTab, setActiveListSubTab] = useState<'movies' | 'tvshows'>('movies');
+  const [isListLoading, setIsListLoading] = useState(false);
+  
+  // "View All" Page State
+  const [viewAllConfig, setViewAllConfig] = useState<{ title: string; fetcher: (page: number, lang: string) => Promise<TmdbApiPopularResponse | TmdbApiTvResponse>; type: 'movie' | 'tv' } | null>(null);
+  
+
+  // --- Effects ---
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -104,199 +95,150 @@ function App() {
       localStorage.setItem('theme', 'light');
     }
   }, [theme]);
-  
+
   useEffect(() => {
-    if (activeTab !== 'favorites' && activeTab !== 'watchlist') {
-      setListSubTab('movies');
-    }
-  }, [activeTab]);
-
-  // Initial data fetching
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const { genres } = await getMovieGenres(language);
-        setGenres(genres);
-      } catch (error) { console.error('Failed to fetch genres:', error); }
-    };
-
-    fetchInitialData();
-
-    // Load movie lists
     const storedFavorites = localStorage.getItem('favoriteMovies');
     if (storedFavorites) setFavoriteIds(new Set(JSON.parse(storedFavorites)));
     const storedWatchlist = localStorage.getItem('watchlistMovies');
     if (storedWatchlist) setWatchlistIds(new Set(JSON.parse(storedWatchlist)));
-
-    // Load TV show lists
     const storedTvFavorites = localStorage.getItem('favoriteTvShows');
     if (storedTvFavorites) setFavoriteTvShowIds(new Set(JSON.parse(storedTvFavorites)));
     const storedTvWatchlist = localStorage.getItem('watchlistTvShows');
     if (storedTvWatchlist) setWatchlistTvShowIds(new Set(JSON.parse(storedTvWatchlist)));
-  }, [language]);
+  }, []);
 
-  const fetchMoviesData = useCallback(async () => {
-      setIsMoviesLoading(true);
-      setError(null);
-      try {
-          const [popular, topRated, nowPlaying, upcoming] = await Promise.all([
-              getPopularMovies(1, language),
-              getTopRatedMovies(1, language),
-              getNowPlayingMovies(1, language),
-              getUpcomingMovies(1, language)
-          ]);
-          setPopularMovies(popular.results);
-          setTopRatedMovies(topRated.results);
-          setNowPlayingMovies(nowPlaying.results);
-          setUpcomingMovies(upcoming.results);
-      } catch (err) {
-          setError(t('failedToLoadMovies'));
-      } finally {
-          setIsMoviesLoading(false);
-      }
-  }, [language, t]);
-  
-  const fetchTvShowsData = useCallback(async () => {
-    setIsTvShowsLoading(true);
+  const fetchAllInitialData = useCallback(async () => {
+    setIsLoading(true);
     setError(null);
     try {
-      const [popular, topRated, airingToday] = await Promise.all([
-        getPopularTvShows(1, language),
-        getTopRatedTvShows(1, language),
-        getAiringTodayTvShows(1, language)
+      const [movGenres, tvGen, nowMov] = await Promise.all([
+        getMovieGenres(language),
+        getTvGenres(language),
+        getNowPlayingMovies(1, language),
       ]);
-      setPopularTvShows(popular.results);
-      setTopRatedTvShows(topRated.results);
-      setAiringTodayTvShows(airingToday.results);
+      setMovieGenres(movGenres.genres);
+      setTvGenres(tvGen.genres);
+      setNowPlayingMovies(nowMov.results);
     } catch (err) {
       setError(t('failedToLoadMovies'));
+      console.error(err);
     } finally {
-      setIsTvShowsLoading(false);
+      setIsLoading(false);
     }
   }, [language, t]);
-
+  
   useEffect(() => {
-    fetchMoviesData();
-    fetchTvShowsData();
-  }, [fetchMoviesData, fetchTvShowsData]);
+    fetchAllInitialData();
+  }, [fetchAllInitialData]);
 
-
+  // Search effect with debounce
   useEffect(() => {
-    if (!searchTerm) {
-      setFilterGenre(null);
-      setFilterYear(null);
-      setFilterRating(null);
+    if (activeTab !== 'search') return;
+
+    if (searchQuery.trim().length < 2) {
+      setSearchedMovies([]);
+      setSearchedTvShows([]);
+      setIsSearching(false);
+      return;
     }
-  }, [searchTerm]);
 
-  const updateFavorites = (newFavorites: Set<number>) => {
+    const searchTimer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const [movieResults, tvShowResults] = await Promise.all([
+          searchMovies(searchQuery, 1, language),
+          searchTvShows(searchQuery, 1, language)
+        ]);
+        setSearchedMovies(movieResults.results);
+        setSearchedTvShows(tvShowResults.results);
+      } catch (err) {
+        setError(t('failedToFetchDetails'));
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(searchTimer);
+  }, [searchQuery, activeTab, language, t]);
+
+  // Effect to fetch details for list pages (Favorites, Watchlist)
+  useEffect(() => {
+    const fetchListDetails = async (movieIds: Set<number>, tvShowIds: Set<number>, type: 'favorites' | 'watchlist') => {
+      setIsListLoading(true);
+      try {
+        const moviePromises = Array.from(movieIds).map(id => getMovieDetails(id, language));
+        const tvShowPromises = Array.from(tvShowIds).map(id => getTvShowDetails(id, language));
+        
+        const [movieDetails, tvShowDetails] = await Promise.all([
+          Promise.all(moviePromises),
+          Promise.all(tvShowPromises)
+        ]);
+
+        if (type === 'favorites') {
+          setFavoriteMovies(movieDetails);
+          setFavoriteTvShows(tvShowDetails);
+        } else {
+          setWatchlistMovies(movieDetails);
+          setWatchlistTvShows(tvShowDetails);
+        }
+      } catch (err) {
+        setError(t('failedToFetchList'));
+      } finally {
+        setIsListLoading(false);
+      }
+    };
+
+    if (activeTab === 'favorites') {
+      setActiveListSubTab('movies');
+      fetchListDetails(favoriteIds, favoriteTvShowIds, 'favorites');
+    } else if (activeTab === 'watchlist') {
+      setActiveListSubTab('movies');
+      fetchListDetails(watchlistIds, watchlistTvShowIds, 'watchlist');
+    }
+  }, [activeTab, favoriteIds, watchlistIds, favoriteTvShowIds, watchlistTvShowIds, language, t]);
+
+  // Reset search when leaving search tab
+  useEffect(() => {
+    if (activeTab !== 'search') {
+      setSearchQuery('');
+      setSearchedMovies([]);
+      setSearchedTvShows([]);
+    }
+  }, [activeTab]);
+
+  // --- Handlers ---
+  const toggleFavorite = (movie: Movie) => {
+    const newFavorites = new Set(favoriteIds);
+    if (newFavorites.has(movie.id)) newFavorites.delete(movie.id); else newFavorites.add(movie.id);
     setFavoriteIds(newFavorites);
     localStorage.setItem('favoriteMovies', JSON.stringify(Array.from(newFavorites)));
   };
-
-  const toggleFavorite = (movie: Movie) => {
-    const newFavorites = new Set(favoriteIds);
-    if (newFavorites.has(movie.id)) {
-      newFavorites.delete(movie.id);
-    } else {
-      newFavorites.add(movie.id);
-    }
-    updateFavorites(newFavorites);
-  };
-  
-  const updateWatchlist = (newWatchlist: Set<number>) => {
+  const toggleWatchlist = (movie: Movie) => {
+    const newWatchlist = new Set(watchlistIds);
+    if (newWatchlist.has(movie.id)) newWatchlist.delete(movie.id); else newWatchlist.add(movie.id);
     setWatchlistIds(newWatchlist);
     localStorage.setItem('watchlistMovies', JSON.stringify(Array.from(newWatchlist)));
   };
-
-  const toggleWatchlist = (movie: Movie) => {
-    const newWatchlist = new Set(watchlistIds);
-    if (newWatchlist.has(movie.id)) {
-      newWatchlist.delete(movie.id);
-    } else {
-      newWatchlist.add(movie.id);
-    }
-    updateWatchlist(newWatchlist);
-  };
-
   const toggleFavoriteTvShow = (tvShow: TVShow) => {
     const newFavorites = new Set(favoriteTvShowIds);
-    if (newFavorites.has(tvShow.id)) {
-        newFavorites.delete(tvShow.id);
-    } else {
-        newFavorites.add(tvShow.id);
-    }
+    if (newFavorites.has(tvShow.id)) newFavorites.delete(tvShow.id); else newFavorites.add(tvShow.id);
     setFavoriteTvShowIds(newFavorites);
     localStorage.setItem('favoriteTvShows', JSON.stringify(Array.from(newFavorites)));
   };
-
   const toggleWatchlistTvShow = (tvShow: TVShow) => {
     const newWatchlist = new Set(watchlistTvShowIds);
-    if (newWatchlist.has(tvShow.id)) {
-        newWatchlist.delete(tvShow.id);
-    } else {
-        newWatchlist.add(tvShow.id);
-    }
+    if (newWatchlist.has(tvShow.id)) newWatchlist.delete(tvShow.id); else newWatchlist.add(tvShow.id);
     setWatchlistTvShowIds(newWatchlist);
     localStorage.setItem('watchlistTvShows', JSON.stringify(Array.from(newWatchlist)));
   };
-  
-  const fetchSearchResults = useCallback(async (term: string, page: number) => {
-    if (!term) return;
-    setIsSearchLoading(true);
-    setError(null);
-    try {
-      const data = await searchMovies(term, page, language);
-      setSearchResults(prev => (page === 1 ? data.results : [...prev, ...data.results]));
-      setTotalPages(data.total_pages);
-    } catch (err) {
-      setError(t('failedToLoadMovies'));
-      setSearchResults([]);
-    } finally {
-      setIsSearchLoading(false);
-    }
-  }, [language, t]);
 
-  // Debounced search effect
-  useEffect(() => {
-    if (activeTab !== 'search') return;
-    
-    if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
-    
-    debounceTimeoutRef.current = window.setTimeout(() => {
-      setCurrentPage(1);
-      fetchSearchResults(searchTerm, 1);
-    }, 500);
-    
-    return () => { if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current); }
-  }, [searchTerm, activeTab, fetchSearchResults]);
-  
-  // Infinite scroll for search
-  useEffect(() => {
-    if (currentPage > 1 && activeTab === 'search') {
-      fetchSearchResults(searchTerm, currentPage);
-    }
-  }, [currentPage, activeTab, searchTerm, fetchSearchResults]);
-
-  const filteredSearchResults = useMemo(() => {
-    if (activeTab !== 'search' || !searchTerm) return searchResults;
-    return searchResults.filter(movie => {
-      const movieYear = movie.release_date ? new Date(movie.release_date).getFullYear() : null;
-      if (filterGenre && !movie.genre_ids.includes(filterGenre)) return false;
-      if (filterYear && movieYear !== filterYear) return false;
-      if (filterRating && movie.vote_average < filterRating) return false;
-      return true;
-    });
-  }, [searchResults, activeTab, searchTerm, filterGenre, filterYear, filterRating]);
-  
-  const handleSelectMovie = async (movie: Movie) => {
+  const handleSelectMovie = async (movie: Movie, options?: { playTrailer: boolean }) => {
     try {
       const details = await getMovieDetails(movie.id, language);
-      setSelectedMovie(details);
+      setSelectedMovie({ ...details, playOnMount: options?.playTrailer });
     } catch(err) {
-      console.error("Failed to fetch movie details", err);
-      setError(t('failedToFetchDetails'))
-      setSelectedMovie(movie);
+      setError(t('failedToFetchDetails'));
+      setSelectedMovie({ ...movie, playOnMount: options?.playTrailer });
     }
   };
 
@@ -305,9 +247,8 @@ function App() {
       const details = await getTvShowDetails(tvShow.id, language);
       setSelectedTvShow(details);
     } catch(err) {
-      console.error("Failed to fetch tv show details", err);
-      setError(t('failedToFetchDetails'))
-      setSelectedTvShow(tvShow); // Fallback to basic details
+      setError(t('failedToFetchDetails'));
+      setSelectedTvShow(tvShow); 
     }
   };
   
@@ -315,304 +256,186 @@ function App() {
     setSelectedMovie(null);
     setTimeout(() => handleSelectMovie(movie), 300);
   };
-  
   const handleSelectSimilarTvShow = async (tvShow: TVShow) => {
     setSelectedTvShow(null);
     setTimeout(() => handleSelectTvShow(tvShow), 300);
   };
-  
-  const loadMoreRef = useCallback(node => {
-    if (isSearchLoading) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && currentPage < totalPages) {
-            setCurrentPage(prev => prev + 1);
-        }
-    });
-    if (node) observer.current.observe(node);
-  }, [isSearchLoading, currentPage, totalPages]);
-
-  const handleSurpriseMe = async () => {
-      try {
-        const data = await getPopularMovies(Math.floor(Math.random() * 10) + 1, language);
-        if (data.results.length > 0) {
-            const randomMovie = data.results[Math.floor(Math.random() * data.results.length)];
-            handleSelectMovie(randomMovie);
-        }
-      } catch (err) {
-          setError(t('couldNotFetchRandom'));
-      }
-  }
-
-  const resetFilters = () => {
-    setFilterGenre(null);
-    setFilterYear(null);
-    setFilterRating(null);
-  };
-
-  const handleViewAllMovies = (title: string, fetcher: (page: number, lang: string) => Promise<TmdbApiPopularResponse>) => {
-    setCategoryView({ title, fetcher });
-    window.scrollTo(0, 0);
-  };
-
-  const handleViewAllTvShows = (title: string, fetcher: (page: number, lang: string) => Promise<TmdbApiTvResponse>) => {
-    setTvCategoryView({ title, fetcher });
-    window.scrollTo(0, 0);
-  };
 
   const handleSelectPerson = async (personId: number) => {
-    if (selectedMovie) setSelectedMovie(null); // Close movie modal first
+    if (selectedMovie) setSelectedMovie(null);
     if (selectedTvShow) setSelectedTvShow(null);
-    setIsPersonLoading(true);
-    setPersonDetails(null);
-    document.body.style.overflow = 'hidden';
-
+    setIsPersonLoading(true); setPersonDetails(null); document.body.style.overflow = 'hidden';
     try {
-      const [details, credits] = await Promise.all([
-        getPersonDetails(personId, language),
-        getPersonMovieCredits(personId, language),
-      ]);
-
-      const allMovies = [...credits.cast, ...credits.crew];
-      const uniqueMovies = Array.from(new Map(allMovies.map(m => [m.id, m])).values())
-        .filter(m => m.poster_path); // Filter out movies without posters
-        
-      const sortedMovies = uniqueMovies.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
-
-      setPersonDetails({ ...details, movies: sortedMovies });
+      const [details, credits] = await Promise.all([ getPersonDetails(personId, language), getPersonMovieCredits(personId, language) ]);
+      const allMovies = [...credits.cast, ...credits.crew].filter(m => m.poster_path).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+      setPersonDetails({ ...details, movies: Array.from(new Map(allMovies.map(m => [m.id, m])).values()) });
     } catch (err) {
-      console.error("Failed to fetch person details", err);
-      setError(t('failedToFetchDetails'));
-      document.body.style.overflow = 'auto';
+      setError(t('failedToFetchDetails')); document.body.style.overflow = 'auto';
     } finally {
       setIsPersonLoading(false);
     }
   };
+  const handleClosePersonModal = () => { setPersonDetails(null); document.body.style.overflow = 'auto'; };
+  const handleSelectMovieFromPerson = (movie: Movie) => { handleClosePersonModal(); setTimeout(() => handleSelectMovie(movie), 300); };
+  
+  const handleViewAll = (title: string, fetcher: any, type: 'movie' | 'tv') => {
+    setViewAllConfig({ title, fetcher, type });
+  };
+  const handleBackFromViewAll = () => setViewAllConfig(null);
 
-  const handleClosePersonModal = () => {
-    setPersonDetails(null);
-    document.body.style.overflow = 'auto';
+  const handleSurpriseMe = async () => {
+    setIsSurpriseLoading(true);
+    setError(null);
+    try {
+      // Fetch the first page to get total_pages
+      const initialData = await getPopularMovies(1, language);
+      const totalPages = Math.min(initialData.total_pages, 500); // TMDB recommends not going over 500
+      const randomPage = Math.floor(Math.random() * totalPages) + 1;
+      
+      const data = await getPopularMovies(randomPage, language);
+      if (data.results.length > 0) {
+        const randomIndex = Math.floor(Math.random() * data.results.length);
+        const randomMovie = data.results[randomIndex];
+        await handleSelectMovie(randomMovie);
+      } else {
+        setError(t('couldNotFetchRandom'));
+      }
+    } catch (err) {
+      setError(t('couldNotFetchRandom'));
+      console.error(err);
+    } finally {
+      setIsSurpriseLoading(false);
+    }
   };
 
-  const handleSelectMovieFromPerson = (movie: Movie) => {
-    handleClosePersonModal();
-    // Delay to allow modal to close gracefully
-    setTimeout(() => handleSelectMovie(movie), 300);
+  // --- Content Rendering ---
+  const renderMoviesPage = () => (
+    <>
+      <HeroSlider movies={nowPlayingMovies.slice(0, 10)} onSelectMovie={handleSelectMovie} />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 space-y-12">
+        <InfiniteMovieSection title={t('popular')} fetcher={getPopularMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
+        <InfiniteMovieSection title={t('topRated')} fetcher={getTopRatedMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
+        <InfiniteMovieSection title={t('nowPlaying')} fetcher={getNowPlayingMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
+        <InfiniteMovieSection title={t('upcoming')} fetcher={getUpcomingMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
+      </div>
+    </>
+  );
+  
+  const renderTvShowsPage = () => (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28 space-y-12">
+        <InfiniteTvShowSection title={t('popularTvShows')} fetcher={getPopularTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
+        <InfiniteTvShowSection title={t('topRatedTvShows')} fetcher={getTopRatedTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
+        <InfiniteTvShowSection title={t('airingToday')} fetcher={getAiringTodayTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
+    </div>
+  );
+
+  const renderSearchPage = () => {
+    const noResults = !isSearching && searchQuery.trim().length > 1 && searchedMovies.length === 0 && searchedTvShows.length === 0;
+    return (
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28">
+        <SearchBar searchTerm={searchQuery} setSearchTerm={setSearchQuery} />
+        {isSearching && <div className="mt-8"><Loader /></div>}
+        {noResults && <p className="text-center mt-8 text-slate-500 dark:text-slate-400">{t('noMoviesFound', { searchTerm: searchQuery })}</p>}
+        {!isSearching && (
+          <div className="mt-8 space-y-12">
+            {searchedMovies.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold mb-4">{t('movies')}</h2>
+                <MovieGrid movies={searchedMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
+              </section>
+            )}
+            {searchedTvShows.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold mb-4">{t('tvShows')}</h2>
+                <TvShowGrid tvShows={searchedTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
+              </section>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
-
-  const ListPage: React.FC<{listIds: Set<number>, type: 'movie' | 'tv'}> = ({ listIds, type }) => {
-    const [listItems, setListItems] = useState<(Movie | TVShow)[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    const fetchListItems = useCallback(async (idSet: Set<number>, itemType: 'movie' | 'tv'): Promise<(Movie | TVShow)[]> => {
-        if (idSet.size === 0) return [];
-        try {
-            const fetcher = itemType === 'movie' ? getMovieDetails : getTvShowDetails;
-            const promises = Array.from(idSet).map(id => fetcher(id, language) as Promise<Movie | TVShow>);
-            return await Promise.all(promises);
-        } catch (err) {
-            setError(t('failedToFetchList'));
-            return [];
-        }
-    }, [language, t]);
-
-    useEffect(() => {
-        const loadList = async () => {
-            setIsLoading(true);
-            const items = await fetchListItems(listIds, type);
-            const userList = new Set(listIds);
-            setListItems(items.filter(item => item && userList.has(item.id)));
-            setIsLoading(false);
-        }
-        loadList();
-    }, [listIds, type, fetchListItems]);
-
-    const renderGrid = () => {
-        if (type === 'movie') {
-            return (
-                <MovieGrid 
-                    movies={listItems as Movie[]}
-                    onSelectMovie={handleSelectMovie} 
-                    favoriteIds={favoriteIds}
-                    onToggleFavorite={toggleFavorite}
-                    watchlistIds={watchlistIds}
-                    onToggleWatchlist={toggleWatchlist}
-                />
-            );
-        } else { // type === 'tv'
-            return (
-                <TvShowGrid
-                    tvShows={listItems as TVShow[]}
-                    onSelectTvShow={handleSelectTvShow}
-                    favoriteIds={favoriteTvShowIds}
-                    onToggleFavorite={toggleFavoriteTvShow}
-                    watchlistIds={watchlistTvShowIds}
-                    onToggleWatchlist={toggleWatchlistTvShow}
-                />
-            );
-        }
-    };
+  
+  const renderListPage = (type: 'favorites' | 'watchlist') => {
+    const isFavorites = type === 'favorites';
+    const title = isFavorites ? t('myFavorites') : t('myWatchlist');
     
-    const getEmptyMessageKey = () => {
-        const isFavorites = activeTab === 'favorites';
-        if (type === 'movie') {
-            return isFavorites ? 'noFavorites' : 'emptyWatchlist';
-        } else { // tv
-            return isFavorites ? 'noFavoriteTvShows' : 'emptyTvShowWatchlist';
-        }
-    };
+    const moviesToList = isFavorites ? favoriteMovies : watchlistMovies;
+    const tvShowsToList = isFavorites ? favoriteTvShows : watchlistTvShows;
+
+    const noMovies = activeListSubTab === 'movies' && moviesToList.length === 0;
+    const noTvShows = activeListSubTab === 'tvshows' && tvShowsToList.length === 0;
+    const emptyMessage = isFavorites ? t('noFavorites') : t('emptyWatchlist');
+    const emptyTvMessage = isFavorites ? t('noFavoriteTvShows') : t('emptyTvShowWatchlist');
 
     return (
-        <>
-            {isLoading && <MovieGridSkeleton />}
-            {!isLoading && listItems.length === 0 && (
-                <div className="text-center py-10">
-                    <p className="text-slate-500 dark:text-slate-400 text-lg">
-                        {t(getEmptyMessageKey())}
-                    </p>
-                </div>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28">
+        <h2 className="text-3xl font-bold text-center mb-8">{title}</h2>
+        <ListSubTabs activeTab={activeListSubTab} setActiveTab={setActiveListSubTab} />
+        
+        {isListLoading ? <Loader /> : (
+          <>
+            {activeListSubTab === 'movies' && (
+              noMovies ? <p className="text-center mt-8 text-slate-500 dark:text-slate-400">{emptyMessage}</p> : 
+              <MovieGrid movies={moviesToList} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
             )}
-            {!isLoading && listItems.length > 0 && renderGrid()}
-        </>
+            {activeListSubTab === 'tvshows' && (
+              noTvShows ? <p className="text-center mt-8 text-slate-500 dark:text-slate-400">{emptyTvMessage}</p> :
+              <TvShowGrid tvShows={tvShowsToList} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
+            )}
+          </>
+        )}
+      </div>
     );
   };
 
+  const renderContent = () => {
+    if (viewAllConfig) {
+        if(viewAllConfig.type === 'movie') {
+            return <div className="pt-28"><CategoryGridPage title={viewAllConfig.title} fetcher={viewAllConfig.fetcher as any} onBack={handleBackFromViewAll} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} /></div>
+        } else {
+            return <div className="pt-28"><TvShowCategoryGridPage title={viewAllConfig.title} fetcher={viewAllConfig.fetcher as any} onBack={handleBackFromViewAll} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} /></div>
+        }
+    }
+    // Fix: Add cases for new tabs to prevent showing the default page.
+    switch (activeTab) {
+      case 'movies': return renderMoviesPage();
+      case 'tvshows': return renderTvShowsPage();
+      case 'search': return renderSearchPage();
+      case 'favorites': return renderListPage('favorites');
+      case 'watchlist': return renderListPage('watchlist');
+      case 'trending':
+        return (
+          <div className="text-center py-20 pt-28">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Trending Coming Soon</h2>
+            <p className="text-slate-500 dark:text-slate-400 mt-2">This section is under construction.</p>
+          </div>
+        );
+      case 'live_broadcasts':
+        return (
+          <div className="text-center py-20 pt-28">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Live Broadcasts Coming Soon</h2>
+            <p className="text-slate-500 dark:text-slate-400 mt-2">This section is under construction.</p>
+          </div>
+        );
+      default: return renderMoviesPage();
+    }
+  };
+
   return (
-    <div className="flex flex-col min-h-screen font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300">
-      <div className="sticky top-0 z-40 w-full">
-        <Header 
-          theme={theme} 
-          setTheme={setTheme}
-          onSurpriseMe={handleSurpriseMe}
-        />
-        <DesktopNav activeTab={activeTab} setActiveTab={setActiveTab} />
-      </div>
+    <div className="bg-slate-100 dark:bg-[#0F172A] min-h-screen font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300">
+      <Header 
+        theme={theme} 
+        setTheme={setTheme}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onSurpriseMe={handleSurpriseMe}
+        isSurpriseLoading={isSurpriseLoading}
+      />
       
-      <main className="flex-grow py-8 pb-24 sm:pb-8">
-        {error && (
-            <div className="text-center py-10 px-4 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg">
-                <p className="font-semibold">{t('errorOccurred')}</p>
-                <p>{error}</p>
-            </div>
-        )}
-
-        {activeTab === 'movies' && (
-          categoryView ? (
-            <CategoryGridPage
-                title={categoryView.title}
-                fetcher={categoryView.fetcher}
-                onBack={() => setCategoryView(null)}
-                onSelectMovie={handleSelectMovie}
-                favoriteIds={favoriteIds}
-                onToggleFavorite={toggleFavorite}
-                watchlistIds={watchlistIds}
-                onToggleWatchlist={toggleWatchlist}
-            />
-          ) : isMoviesLoading ? (
-                <>
-                    <HeroSliderSkeleton />
-                    <div className="px-4 sm:px-6 lg:px-8 mt-12 space-y-12">
-                      <MovieSliderSkeleton />
-                      <MovieSliderSkeleton />
-                      <MovieSliderSkeleton />
-                    </div>
-                </>
-            ) : (
-                <div className="space-y-12">
-                    <HeroSlider movies={nowPlayingMovies.slice(0, 10)} onSelectMovie={handleSelectMovie} />
-                    <div className="px-4 sm:px-6 lg:px-8">
-                      <div className="space-y-12">
-                        <MovieSlider title={t('popular')} movies={popularMovies} onViewAll={() => handleViewAllMovies(t('popular'), getPopularMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
-                        <MovieSlider title={t('topRated')} movies={topRatedMovies} onViewAll={() => handleViewAllMovies(t('topRated'), getTopRatedMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
-                        <MovieSlider title={t('nowPlaying')} movies={nowPlayingMovies} onViewAll={() => handleViewAllMovies(t('nowPlaying'), getNowPlayingMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
-                        <MovieSlider title={t('upcoming')} movies={upcomingMovies} onViewAll={() => handleViewAllMovies(t('upcoming'), getUpcomingMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
-                      </div>
-                    </div>
-                </div>
-            )
-        )}
-        
-        {activeTab === 'tvshows' && (
-             tvCategoryView ? (
-                <TvShowCategoryGridPage
-                    title={tvCategoryView.title}
-                    fetcher={tvCategoryView.fetcher}
-                    onBack={() => setTvCategoryView(null)}
-                    onSelectTvShow={handleSelectTvShow}
-                    favoriteIds={favoriteTvShowIds}
-                    onToggleFavorite={toggleFavoriteTvShow}
-                    watchlistIds={watchlistTvShowIds}
-                    onToggleWatchlist={toggleWatchlistTvShow}
-                />
-            ) : (
-                <div className="px-4 sm:px-6 lg:px-8">
-                  {isTvShowsLoading ? (
-                      <div className="space-y-12">
-                          <MovieSliderSkeleton />
-                          <MovieSliderSkeleton />
-                          <MovieSliderSkeleton />
-                      </div>
-                  ) : (
-                      <div className="space-y-12">
-                          <TvShowSlider title={t('popularTvShows')} tvShows={popularTvShows} onViewAll={() => handleViewAllTvShows(t('popularTvShows'), getPopularTvShows)} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
-                          <TvShowSlider title={t('topRatedTvShows')} tvShows={topRatedTvShows} onViewAll={() => handleViewAllTvShows(t('topRatedTvShows'), getTopRatedTvShows)} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
-                          <TvShowSlider title={t('airingToday')} tvShows={airingTodayTvShows} onViewAll={() => handleViewAllTvShows(t('airingToday'), getAiringTodayTvShows)} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
-                      </div>
-                  )}
-                </div>
-            )
-        )}
-
-        {activeTab === 'search' && (
-            <div className="px-4 sm:px-6 lg:px-8">
-                <div className="mb-6">
-                    <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-                </div>
-                {searchTerm && (
-                    <SearchFilters 
-                        genres={genres}
-                        filters={{ genre: filterGenre, year: filterYear, rating: filterRating }}
-                        onFilterChange={{ setGenre: setFilterGenre, setYear: setFilterYear, setRating: setFilterRating }}
-                        onResetFilters={resetFilters}
-                    />
-                )}
-                {isSearchLoading && searchResults.length === 0 && <MovieGridSkeleton />}
-                {!isSearchLoading && searchTerm && filteredSearchResults.length === 0 && (
-                     <div className="text-center py-10">
-                        <p className="text-slate-500 dark:text-slate-400 text-lg">
-                            {t('noMoviesFound', { searchTerm })}
-                        </p>
-                    </div>
-                )}
-                {filteredSearchResults.length > 0 && (
-                     <MovieGrid
-                        movies={filteredSearchResults}
-                        onSelectMovie={handleSelectMovie} 
-                        favoriteIds={favoriteIds}
-                        onToggleFavorite={toggleFavorite}
-                        watchlistIds={watchlistIds}
-                        onToggleWatchlist={toggleWatchlist}
-                    />
-                )}
-                <div ref={loadMoreRef} className="h-10">
-                    {isSearchLoading && searchResults.length > 0 && <Loader />}
-                </div>
-            </div>
-        )}
-        
-        {(activeTab === 'favorites' || activeTab === 'watchlist') && (
-            <div className="px-4 sm:px-6 lg:px-8">
-                <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-white">
-                    {activeTab === 'favorites' ? t('myFavorites') : t('myWatchlist')}
-                </h2>
-                <ListSubTabs activeTab={listSubTab} setActiveTab={setListSubTab} />
-                { listSubTab === 'movies' ? 
-                    <ListPage listIds={activeTab === 'favorites' ? favoriteIds : watchlistIds} type="movie" /> :
-                    <ListPage listIds={activeTab === 'favorites' ? favoriteTvShowIds : watchlistTvShowIds} type="tv" />
-                }
-            </div>
-        )}
-
+      <main className="pb-24 sm:pb-8">
+        {error && <p className="text-red-500 text-center">{error}</p>}
+        {renderContent()}
       </main>
 
       <Footer />
@@ -627,6 +450,7 @@ function App() {
           onToggleWatchlist={toggleWatchlist}
           onSelectSimilarMovie={handleSelectSimilarMovie}
           onSelectPerson={handleSelectPerson}
+          playOnMount={selectedMovie.playOnMount}
         />
       )}
 

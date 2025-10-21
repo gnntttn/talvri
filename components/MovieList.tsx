@@ -5,7 +5,7 @@ import { MovieCard } from './MovieCard';
 
 interface MovieListProps {
   movies: Movie[];
-  onSelectMovie: (movie: Movie) => void;
+  onSelectMovie: (movie: Movie, options?: { playTrailer: boolean }) => void;
   favoriteIds: Set<number>;
   onToggleFavorite: (movie: Movie) => void;
   watchlistIds: Set<number>;

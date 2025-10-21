@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { TVShow, TmdbApiTvResponse } from '../types';
 import { Loader } from './Loader';
-import { MovieGridSkeleton } from './MovieGridSkeleton';
+import { MovieListSkeleton } from './MovieListSkeleton';
 import { useTranslation } from '../contexts/LanguageContext';
 import { TvShowGrid } from './TvShowGrid';
 
@@ -86,7 +87,7 @@ export const TvShowCategoryGridPage: React.FC<TvShowCategoryGridPageProps> = ({
             <h2 className="text-2xl font-bold text-slate-800 dark:text-white mx-4">{title}</h2>
         </div>
 
-        {isLoading && tvShows.length === 0 && <MovieGridSkeleton />}
+        {isLoading && tvShows.length === 0 && <MovieListSkeleton />}
         
         {tvShows.length > 0 && (
             <TvShowGrid

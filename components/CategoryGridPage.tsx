@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Movie, TmdbApiPopularResponse } from '../types';
 import { MovieGrid } from './MovieGrid';
 import { Loader } from './Loader';
-import { MovieGridSkeleton } from './MovieGridSkeleton';
+import { MovieListSkeleton } from './MovieListSkeleton';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface CategoryGridPageProps {
@@ -87,7 +88,7 @@ export const CategoryGridPage: React.FC<CategoryGridPageProps> = ({
             <h2 className="text-2xl font-bold text-slate-800 dark:text-white mx-4">{title}</h2>
         </div>
 
-        {isLoading && movies.length === 0 && <MovieGridSkeleton />}
+        {isLoading && movies.length === 0 && <MovieListSkeleton />}
         
         {movies.length > 0 && (
             <MovieGrid

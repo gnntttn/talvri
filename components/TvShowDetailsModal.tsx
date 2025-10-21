@@ -1,9 +1,10 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import type { TVShow, WatchProviderDetails, Cast, Crew, Review } from '../types';
+import type { TVShow, WatchProviderDetails, Cast, Crew, Review, SeasonDetails, Episode } from '../types';
 import { TMDB_IMAGE_BASE_URL } from '../constants';
-import { getSimilarTvShows } from '../services/tmdbService';
+import { getSimilarTvShows, getTvShowSeasonDetails } from '../services/tmdbService';
 import { useTranslation } from '../contexts/LanguageContext';
+import { Loader } from './Loader';
 
 interface TvShowDetailsModalProps {
   tvShow: TVShow;
@@ -154,6 +155,55 @@ const ReviewCard: React.FC<{ review: Review }> = ({ review }) => {
   );
 };
 
+const EpisodeCard: React.FC<{ episode: Episode }> = ({ episode }) => {
+    const { t } = useTranslation();
+    const [isExpanded, setIsExpanded] = useState(false);
+    const stillUrl = episode.still_path ? `${TMDB_IMAGE_BASE_URL}/w300${episode.still_path}` : null;
+
+    return (
+        <div className="bg-slate-100 dark:bg-slate-900/50 rounded-lg p-3 flex flex-col sm:flex-row gap-4 text-left rtl:text-right">
+            <div className="flex-shrink-0 w-full sm:w-40">
+                {stillUrl ? (
+                    <img src={stillUrl} alt={episode.name} className="w-full h-auto object-cover rounded-md" />
+                ) : (
+                    <div className="w-full aspect-video bg-slate-200 dark:bg-slate-700 rounded-md flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-slate-400">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.158 0a.079.079 0 1 1-.158 0 .079.079 0 0 1 .158 0Z" />
+                        </svg>
+                    </div>
+                )}
+            </div>
+            <div className="flex-grow">
+                <h4 className="font-bold text-slate-800 dark:text-slate-200">
+                    {t('episode')} {episode.episode_number}: {episode.name}
+                </h4>
+                <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 mt-1 space-x-3 rtl:space-x-reverse">
+                    <span>{episode.air_date}</span>
+                    {episode.vote_average > 0 && (
+                        <span className="flex items-center">
+                            <StarIcon className="w-3 h-3 text-yellow-400" />
+                            <span className="ml-1 rtl:mr-1 rtl:ml-0 font-semibold">{episode.vote_average.toFixed(1)}</span>
+                        </span>
+                    )}
+                </div>
+                {episode.overview && (
+                    <>
+                        <p className={`text-sm text-slate-600 dark:text-slate-300 mt-2 ${!isExpanded && 'line-clamp-2'}`}>
+                            {episode.overview}
+                        </p>
+                        {episode.overview.length > 150 && (
+                             <button onClick={() => setIsExpanded(!isExpanded)} className="text-indigo-600 dark:text-indigo-400 text-sm font-semibold mt-1 hover:underline">
+                                {isExpanded ? t('showLess') : t('readMore')}
+                            </button>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
 export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, onClose, isFavorite, onToggleFavorite, isWatchlisted, onToggleWatchlist, onSelectSimilarTvShow, onSelectPerson }) => {
   const { language, t } = useTranslation();
   const backdropUrl = tvShow.backdrop_path
@@ -163,6 +213,9 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
   const [similarTvShows, setSimilarTvShows] = useState<TVShow[]>([]);
   const [showTrailer, setShowTrailer] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number | null>(null);
+  const [seasonDetails, setSeasonDetails] = useState<SeasonDetails | null>(null);
+  const [isSeasonLoading, setIsSeasonLoading] = useState(false);
 
   const trailer = tvShow.videos?.results.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'));
   const providers = tvShow['watch/providers']?.results.US;
@@ -198,6 +251,23 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
     document.body.style.overflow = 'hidden';
 
     setShowTrailer(false);
+    setSelectedSeasonNumber(null);
+    setSeasonDetails(null);
+
+    if (tvShow.seasons && tvShow.seasons.length > 0) {
+        const airedSeasons = tvShow.seasons
+            .filter(s => s.season_number > 0 && s.air_date && new Date(s.air_date) <= new Date())
+            .sort((a, b) => b.season_number - a.season_number);
+        
+        if (airedSeasons.length > 0) {
+            setSelectedSeasonNumber(airedSeasons[0].season_number);
+        } else {
+            const nonSpecialSeasons = tvShow.seasons.filter(s => s.season_number > 0);
+            if (nonSpecialSeasons.length > 0) {
+                setSelectedSeasonNumber(nonSpecialSeasons[0].season_number);
+            }
+        }
+    }
 
     const fetchSimilar = async () => {
         try {
@@ -214,6 +284,26 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
       document.body.style.overflow = 'auto';
     };
   }, [onClose, tvShow.id, language]);
+
+  useEffect(() => {
+    if (selectedSeasonNumber === null) return;
+
+    const fetchSeasonDetails = async () => {
+        setIsSeasonLoading(true);
+        try {
+            const details = await getTvShowSeasonDetails(tvShow.id, selectedSeasonNumber, language);
+            setSeasonDetails(details);
+        } catch (err) {
+            console.error("Failed to fetch season details", err);
+            setSeasonDetails(null);
+        } finally {
+            setIsSeasonLoading(false);
+        }
+    };
+
+    fetchSeasonDetails();
+  }, [tvShow.id, selectedSeasonNumber, language]);
+
 
   return (
     <>
@@ -332,6 +422,41 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
                     <PersonCard person={creator} onSelect={onSelectPerson} subtitle={t('creator')} />
                 </div>
             )}
+            
+            {tvShow.seasons && tvShow.seasons.filter(s => s.season_number > 0 && s.episode_count > 0).length > 0 && (
+                <div className="mb-8">
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-white">{t('seasonsAndEpisodes')}</h3>
+                        <select
+                            value={selectedSeasonNumber || ''}
+                            onChange={(e) => setSelectedSeasonNumber(Number(e.target.value))}
+                            className="rounded-md border-0 bg-slate-100 dark:bg-slate-700 py-1.5 pl-3 pr-8 rtl:pr-3 rtl:pl-8 text-slate-900 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm text-sm"
+                            aria-label={t('season')}
+                        >
+                            {tvShow.seasons
+                                .filter(s => s.season_number > 0 && s.episode_count > 0)
+                                .map(s => (
+                                    <option key={s.id} value={s.season_number}>{s.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    
+                    {isSeasonLoading && (
+                        <div className="flex justify-center items-center py-8">
+                            <Loader />
+                        </div>
+                    )}
+
+                    {!isSeasonLoading && seasonDetails && (
+                        <div className="max-h-96 overflow-y-auto space-y-3 -mr-2 pr-2">
+                            {seasonDetails.episodes.map(episode => (
+                                <EpisodeCard key={episode.id} episode={episode} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
 
             {cast && cast.length > 0 && (
                 <div className="mb-8">
@@ -380,6 +505,12 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
         to { transform: translateY(0); opacity: 1; }
         }
         .animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
+         .line-clamp-2 {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
     `}</style>
     </>
   );
