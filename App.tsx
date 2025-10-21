@@ -488,7 +488,7 @@ function App() {
         <DesktopNav activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
       
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 sm:pb-8">
+      <main className="flex-grow py-8 pb-24 sm:pb-8">
         {error && (
             <div className="text-center py-10 px-4 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg">
                 <p className="font-semibold">{t('errorOccurred')}</p>
@@ -511,17 +511,23 @@ function App() {
           ) : isMoviesLoading ? (
                 <>
                     <HeroSliderSkeleton />
-                    <MovieSliderSkeleton />
-                    <MovieSliderSkeleton />
-                    <MovieSliderSkeleton />
+                    <div className="px-4 sm:px-6 lg:px-8 mt-12 space-y-12">
+                      <MovieSliderSkeleton />
+                      <MovieSliderSkeleton />
+                      <MovieSliderSkeleton />
+                    </div>
                 </>
             ) : (
                 <div className="space-y-12">
                     <HeroSlider movies={nowPlayingMovies.slice(0, 10)} onSelectMovie={handleSelectMovie} />
-                    <MovieSlider title={t('popular')} movies={popularMovies} onViewAll={() => handleViewAllMovies(t('popular'), getPopularMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
-                    <MovieSlider title={t('topRated')} movies={topRatedMovies} onViewAll={() => handleViewAllMovies(t('topRated'), getTopRatedMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
-                    <MovieSlider title={t('nowPlaying')} movies={nowPlayingMovies} onViewAll={() => handleViewAllMovies(t('nowPlaying'), getNowPlayingMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
-                    <MovieSlider title={t('upcoming')} movies={upcomingMovies} onViewAll={() => handleViewAllMovies(t('upcoming'), getUpcomingMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
+                    <div className="px-4 sm:px-6 lg:px-8">
+                      <div className="space-y-12">
+                        <MovieSlider title={t('popular')} movies={popularMovies} onViewAll={() => handleViewAllMovies(t('popular'), getPopularMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
+                        <MovieSlider title={t('topRated')} movies={topRatedMovies} onViewAll={() => handleViewAllMovies(t('topRated'), getTopRatedMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
+                        <MovieSlider title={t('nowPlaying')} movies={nowPlayingMovies} onViewAll={() => handleViewAllMovies(t('nowPlaying'), getNowPlayingMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
+                        <MovieSlider title={t('upcoming')} movies={upcomingMovies} onViewAll={() => handleViewAllMovies(t('upcoming'), getUpcomingMovies)} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
+                      </div>
+                    </div>
                 </div>
             )
         )}
@@ -538,23 +544,27 @@ function App() {
                     watchlistIds={watchlistTvShowIds}
                     onToggleWatchlist={toggleWatchlistTvShow}
                 />
-            ) : isTvShowsLoading ? (
-                <>
-                    <MovieSliderSkeleton />
-                    <MovieSliderSkeleton />
-                    <MovieSliderSkeleton />
-                </>
             ) : (
-                <div className="space-y-12">
-                    <TvShowSlider title={t('popularTvShows')} tvShows={popularTvShows} onViewAll={() => handleViewAllTvShows(t('popularTvShows'), getPopularTvShows)} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
-                    <TvShowSlider title={t('topRatedTvShows')} tvShows={topRatedTvShows} onViewAll={() => handleViewAllTvShows(t('topRatedTvShows'), getTopRatedTvShows)} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
-                    <TvShowSlider title={t('airingToday')} tvShows={airingTodayTvShows} onViewAll={() => handleViewAllTvShows(t('airingToday'), getAiringTodayTvShows)} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
+                <div className="px-4 sm:px-6 lg:px-8">
+                  {isTvShowsLoading ? (
+                      <div className="space-y-12">
+                          <MovieSliderSkeleton />
+                          <MovieSliderSkeleton />
+                          <MovieSliderSkeleton />
+                      </div>
+                  ) : (
+                      <div className="space-y-12">
+                          <TvShowSlider title={t('popularTvShows')} tvShows={popularTvShows} onViewAll={() => handleViewAllTvShows(t('popularTvShows'), getPopularTvShows)} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
+                          <TvShowSlider title={t('topRatedTvShows')} tvShows={topRatedTvShows} onViewAll={() => handleViewAllTvShows(t('topRatedTvShows'), getTopRatedTvShows)} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
+                          <TvShowSlider title={t('airingToday')} tvShows={airingTodayTvShows} onViewAll={() => handleViewAllTvShows(t('airingToday'), getAiringTodayTvShows)} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
+                      </div>
+                  )}
                 </div>
             )
         )}
 
         {activeTab === 'search' && (
-            <>
+            <div className="px-4 sm:px-6 lg:px-8">
                 <div className="mb-6">
                     <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                 </div>
@@ -587,11 +597,11 @@ function App() {
                 <div ref={loadMoreRef} className="h-10">
                     {isSearchLoading && searchResults.length > 0 && <Loader />}
                 </div>
-            </>
+            </div>
         )}
         
         {(activeTab === 'favorites' || activeTab === 'watchlist') && (
-            <div>
+            <div className="px-4 sm:px-6 lg:px-8">
                 <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-white">
                     {activeTab === 'favorites' ? t('myFavorites') : t('myWatchlist')}
                 </h2>

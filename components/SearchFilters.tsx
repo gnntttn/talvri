@@ -46,7 +46,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
             id="genre-filter"
             value={filters.genre || ''}
             onChange={(e) => onFilterChange.setGenre(e.target.value ? Number(e.target.value) : null)}
-            className="block w-full rounded-md border-0 bg-white dark:bg-slate-700 py-1.5 pl-3 pr-10 rtl:pr-3 rtl:pl-10 text-slate-900 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm transition-all duration-200 ease-in-out hover:shadow-md focus:shadow-lg"
+            className="block w-full rounded-md border-0 bg-white dark:bg-slate-700 py-1.5 pl-3 pr-10 rtl:pr-3 rtl:pl-10 text-slate-900 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm transition-all duration-200 ease-in-out hover:shadow-md focus:shadow-lg hover:-translate-y-0.5"
             aria-label={t('genre')}
           >
             <option value="">{t('allGenres')}</option>
@@ -63,7 +63,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
             id="year-filter"
             value={filters.year || ''}
             onChange={(e) => onFilterChange.setYear(e.target.value ? Number(e.target.value) : null)}
-            className="block w-full rounded-md border-0 bg-white dark:bg-slate-700 py-1.5 pl-3 pr-10 rtl:pr-3 rtl:pl-10 text-slate-900 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm transition-all duration-200 ease-in-out hover:shadow-md focus:shadow-lg"
+            className="block w-full rounded-md border-0 bg-white dark:bg-slate-700 py-1.5 pl-3 pr-10 rtl:pr-3 rtl:pl-10 text-slate-900 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm transition-all duration-200 ease-in-out hover:shadow-md focus:shadow-lg hover:-translate-y-0.5"
              aria-label={t('releaseYear')}
           >
             <option value="">{t('anyYear')}</option>

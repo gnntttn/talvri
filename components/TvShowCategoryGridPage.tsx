@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { TVShow, TmdbApiTvResponse } from '../types';
 import { Loader } from './Loader';
@@ -79,7 +78,7 @@ export const TvShowCategoryGridPage: React.FC<TvShowCategoryGridPageProps> = ({
 
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in px-4 sm:px-6 lg:px-8">
         <div className="flex items-center mb-6">
             <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors rtl:rotate-180" aria-label="Go back">
                 <ArrowLeftIcon className="w-6 h-6" />
