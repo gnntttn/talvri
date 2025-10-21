@@ -1,0 +1,5 @@
+{
+  "name": "talvri",
+  "description": "A professional movie and TV show discovery web application named talvri. Features real-time search using the TMDB API, support for dark and light themes, and a fully responsive UI for a seamless experience on any device.",
+  "requestFramePermissions": []
+}
