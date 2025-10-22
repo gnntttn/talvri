@@ -47,10 +47,14 @@ function App() {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== 'undefined' && window.localStorage) {
       const storedTheme = window.localStorage.getItem('theme');
-      if (storedTheme === 'light' || storedTheme === 'dark') return storedTheme;
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+      if (storedTheme === 'light' || storedTheme === 'dark') {
+        return storedTheme;
+      }
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
     }
-    return 'dark'; // Default to dark theme
+    return 'light'; // Default to light theme to match inline script
   });
   const [activeTab, setActiveTab] = useState<ActiveTab>('movies');
   const [activeView, setActiveView] = useState<ActiveView>({ type: 'main' });

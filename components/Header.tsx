@@ -64,21 +64,24 @@ interface HeaderProps {
   onMenuClick: () => void;
 }
 
-const NavItem: React.FC<{
+interface NavItemProps {
   label: string;
   icon: React.ReactNode;
   isActive: boolean;
   onClick: () => void;
   onHeroPage: boolean;
-}> = ({ label, icon, isActive, onClick, onHeroPage }) => {
-    const baseClasses = 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200';
+}
+
+const NavItem = React.forwardRef<HTMLButtonElement, NavItemProps>(
+  ({ label, icon, isActive, onClick, onHeroPage }, ref) => {
+    const baseClasses = 'relative z-10 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200';
     
     // Styles for hero page (dark background)
-    const heroActiveClasses = 'bg-white/10 text-white';
+    const heroActiveClasses = 'bg-transparent text-white';
     const heroInactiveClasses = 'text-slate-300 hover:text-white hover:bg-white/10';
 
     // Styles for other pages (light/dark theme background)
-    const pageActiveClasses = 'bg-violet-600 text-white';
+    const pageActiveClasses = 'bg-transparent text-white';
     const pageInactiveClasses = 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800/60';
 
     const activeStyle = onHeroPage ? heroActiveClasses : pageActiveClasses;
@@ -86,6 +89,7 @@ const NavItem: React.FC<{
 
     return (
         <button
+            ref={ref}
             onClick={onClick}
             className={`${baseClasses} ${isActive ? activeStyle : inactiveStyle}`}
         >
@@ -93,11 +97,16 @@ const NavItem: React.FC<{
             <span className="hidden sm:inline">{label}</span>
         </button>
     );
-};
+  }
+);
+NavItem.displayName = "NavItem";
 
 
 export const Header: React.FC<HeaderProps> = ({ theme, setTheme, activeTab, setActiveTab, onSurpriseMe, isSurpriseLoading, onHeroPage, onMenuClick }) => {
   const { t, language, setLanguage } = useTranslation();
+  const navContainerRef = React.useRef<HTMLElement>(null);
+  const navItemRefs = React.useRef<Map<ActiveTab, HTMLButtonElement | null>>(new Map());
+  const [indicatorStyle, setIndicatorStyle] = React.useState<React.CSSProperties>({ opacity: 0 });
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'ar' : 'en');
@@ -116,15 +125,32 @@ export const Header: React.FC<HeaderProps> = ({ theme, setTheme, activeTab, setA
     { id: 'favorites', label: t('favorites'), icon: <FavoritesIcon className="w-5 h-5" /> },
   ];
 
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+        const activeElement = navItemRefs.current.get(activeTab);
+        if (activeElement) {
+            setIndicatorStyle({
+                left: activeElement.offsetLeft,
+                width: activeElement.offsetWidth,
+                height: activeElement.offsetHeight,
+                opacity: 1,
+            });
+        } else {
+            setIndicatorStyle(prev => ({ ...prev, opacity: 0 }));
+        }
+    }, 50); // Small timeout to allow layout to settle
+    return () => clearTimeout(timeoutId);
+  }, [activeTab, language, onHeroPage, t]);
+
   const headerClasses = onHeroPage
     ? "absolute top-0 z-30 w-full p-4 sm:p-6 bg-gradient-to-b from-black/50 to-transparent"
     : "fixed top-0 z-30 w-full p-4 sm:p-6 bg-slate-100/80 dark:bg-[#0F172A]/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800";
   
   const navContainerClasses = onHeroPage
-    ? "hidden md:flex items-center gap-1 bg-slate-800/50 backdrop-blur-sm p-1 rounded-full"
-    : "hidden md:flex items-center gap-1 bg-slate-200/60 dark:bg-slate-800/60 backdrop-blur-sm p-1 rounded-full";
+    ? "hidden md:flex relative items-center gap-1 bg-slate-800/50 backdrop-blur-sm p-1 rounded-full"
+    : "hidden md:flex relative items-center gap-1 bg-slate-200/60 dark:bg-slate-800/60 backdrop-blur-sm p-1 rounded-full";
   
-  const navDividerClasses = onHeroPage ? "w-px h-6 bg-white/10 mx-1" : "w-px h-6 bg-slate-300 dark:bg-slate-700 mx-1";
+  const navDividerClasses = onHeroPage ? "w-px h-6 bg-white/10 mx-1 z-10" : "w-px h-6 bg-slate-300 dark:bg-slate-700 mx-1 z-10";
 
   const surpriseMeButtonClasses = onHeroPage
     ? "hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -138,6 +164,11 @@ export const Header: React.FC<HeaderProps> = ({ theme, setTheme, activeTab, setA
     ? "p-2 rounded-full text-white hover:bg-white/10"
     : "p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800/60";
 
+  const indicatorClasses = onHeroPage
+    ? "absolute top-1/2 -translate-y-1/2 bg-white/10 rounded-lg transition-all duration-300 ease-in-out"
+    : "absolute top-1/2 -translate-y-1/2 bg-violet-600 rounded-lg shadow-md transition-all duration-300 ease-in-out";
+
+
   return (
     <header className={headerClasses}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -150,9 +181,15 @@ export const Header: React.FC<HeaderProps> = ({ theme, setTheme, activeTab, setA
                     <span className="text-violet-400">t</span>alvri
                 </h1>
             </div>
-            <nav className={navContainerClasses}>
+            <nav ref={navContainerRef} className={navContainerClasses}>
+                <div
+                    className={indicatorClasses}
+                    style={indicatorStyle}
+                />
                 {navItems.map(item => (
                     <NavItem 
+                        // Fix: The ref callback for a React component should not return a value. Wrapping the expression in curly braces ensures the callback implicitly returns undefined, which is compatible with the expected 'void' return type.
+                        ref={el => { navItemRefs.current.set(item.id, el); }}
                         key={item.id}
                         label={item.label}
                         icon={item.icon}
@@ -164,6 +201,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, setTheme, activeTab, setA
                 <div className={navDividerClasses}></div>
                  {listNavItems.map(item => (
                     <NavItem 
+                        // Fix: The ref callback for a React component should not return a value. Wrapping the expression in curly braces ensures the callback implicitly returns undefined, which is compatible with the expected 'void' return type.
+                        ref={el => { navItemRefs.current.set(item.id, el); }}
                         key={item.id}
                         label={item.label}
                         icon={item.icon}
