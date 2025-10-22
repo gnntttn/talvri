@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Movie, TVShow, Genre } from '../types';
 import { discoverMedia } from '../services/tmdbService';
@@ -8,6 +9,7 @@ import { useTranslation } from '../contexts/LanguageContext';
 import { MovieGrid } from './MovieGrid';
 import { TvShowGrid } from './TvShowGrid';
 import { SearchFilters } from './SearchFilters';
+import { ErrorDisplay } from './ErrorDisplay';
 
 interface DiscoverPageProps {
   movieGenres: Genre[];
@@ -50,15 +52,19 @@ export const DiscoverPage: React.FC<DiscoverPageProps> = (props) => {
     const [isLoading, setIsLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [error, setError] = useState<string | null>(null);
     const observer = useRef<IntersectionObserver | null>(null);
 
     const loadResults = useCallback(async (page: number, shouldAppend: boolean) => {
         setIsLoading(true);
+        if (!shouldAppend) setError(null);
         try {
             const data = await discoverMedia(mediaType, filters, page, language);
             setResults(prev => (shouldAppend ? [...prev, ...data.results] : data.results));
             setTotalPages(data.total_pages);
         } catch (err) {
+            const error = err as Error;
+            if (!shouldAppend) setError(error.message);
             console.error(`Failed to discover ${mediaType}`, err);
         } finally {
             setIsLoading(false);
@@ -70,7 +76,7 @@ export const DiscoverPage: React.FC<DiscoverPageProps> = (props) => {
         setCurrentPage(1);
         setTotalPages(1);
         loadResults(1, false);
-    }, [language, mediaType, filters]);
+    }, [language, mediaType, filters, loadResults]);
   
     const loadMoreRef = useCallback(node => {
         if (isLoading) return;
@@ -93,7 +99,41 @@ export const DiscoverPage: React.FC<DiscoverPageProps> = (props) => {
 
     const onResetFilters = () => setFilters({ genre: null, year: null, rating: null });
 
-    const noResults = !isLoading && results.length === 0;
+    const noResults = !isLoading && results.length === 0 && !error;
+    
+    const renderGrid = () => {
+        if (error) {
+            return <ErrorDisplay message={error} onRetry={() => loadResults(1, false)} />;
+        }
+        if (isLoading && results.length === 0) {
+            return <MovieListSkeleton count={20} />;
+        }
+        if (noResults) {
+            return <p className="text-center mt-8 text-slate-500 dark:text-slate-400">{t('noMoviesFound')}</p>;
+        }
+        if (results.length > 0) {
+            return mediaType === 'movie' ? (
+                <MovieGrid 
+                    movies={results as Movie[]}
+                    onSelectMovie={props.onSelectMovie}
+                    favoriteIds={props.favoriteMovieIds}
+                    onToggleFavorite={props.onToggleFavoriteMovie}
+                    watchlistIds={props.watchlistMovieIds}
+                    onToggleWatchlist={props.onToggleWatchlistMovie}
+                />
+            ) : (
+                <TvShowGrid 
+                    tvShows={results as TVShow[]}
+                    onSelectTvShow={props.onSelectTvShow}
+                    favoriteIds={props.favoriteTvShowIds}
+                    onToggleFavorite={props.onToggleFavoriteTvShow}
+                    watchlistIds={props.watchlistTvShowIds}
+                    onToggleWatchlist={props.onToggleWatchlistTvShow}
+                />
+            );
+        }
+        return null;
+    }
 
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28 animate-fade-in">
@@ -106,28 +146,7 @@ export const DiscoverPage: React.FC<DiscoverPageProps> = (props) => {
                 onResetFilters={onResetFilters}
             />
 
-            {isLoading && results.length === 0 && <MovieListSkeleton count={20} />}
-            {noResults && <p className="text-center mt-8 text-slate-500 dark:text-slate-400">{t('noMoviesFound', { searchTerm: '' })}</p>}
-            
-            {results.length > 0 && (
-                mediaType === 'movie' ? 
-                <MovieGrid 
-                    movies={results as Movie[]}
-                    onSelectMovie={props.onSelectMovie}
-                    favoriteIds={props.favoriteMovieIds}
-                    onToggleFavorite={props.onToggleFavoriteMovie}
-                    watchlistIds={props.watchlistMovieIds}
-                    onToggleWatchlist={props.onToggleWatchlistMovie}
-                /> :
-                <TvShowGrid 
-                    tvShows={results as TVShow[]}
-                    onSelectTvShow={props.onSelectTvShow}
-                    favoriteIds={props.favoriteTvShowIds}
-                    onToggleFavorite={props.onToggleFavoriteTvShow}
-                    watchlistIds={props.watchlistTvShowIds}
-                    onToggleWatchlist={props.onToggleWatchlistTvShow}
-                />
-            )}
+            {renderGrid()}
             
             <div ref={loadMoreRef} className="h-10">
                 {isLoading && results.length > 0 && <Loader />}

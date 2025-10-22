@@ -1,10 +1,12 @@
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Movie, TmdbApiPopularResponse } from '../types';
 import { MovieGrid } from './MovieGrid';
 import { Loader } from './Loader';
 import { MovieListSkeleton } from './MovieListSkeleton';
 import { useTranslation } from '../contexts/LanguageContext';
+import { ErrorDisplay } from './ErrorDisplay';
 
 interface CategoryGridPageProps {
   title: string;
@@ -34,21 +36,24 @@ export const CategoryGridPage: React.FC<CategoryGridPageProps> = ({
   watchlistIds,
   onToggleWatchlist,
 }) => {
-  // Fix: Use the useTranslation hook to get the language from context.
   const { language } = useTranslation();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState<string | null>(null);
   const observer = useRef<IntersectionObserver | null>(null);
 
   const loadMovies = useCallback(async (page: number) => {
     setIsLoading(true);
+    if (page === 1) setError(null);
     try {
       const data = await fetcher(page, language);
       setMovies(prev => (page === 1 ? data.results : [...prev, ...data.results]));
       setTotalPages(data.total_pages);
     } catch (err) {
+      const error = err as Error;
+      if (page === 1) setError(error.message);
       console.error("Failed to fetch category movies", err);
     } finally {
       setIsLoading(false);
@@ -88,17 +93,19 @@ export const CategoryGridPage: React.FC<CategoryGridPageProps> = ({
             <h2 className="text-2xl font-bold text-slate-800 dark:text-white mx-4">{title}</h2>
         </div>
 
-        {isLoading && movies.length === 0 && <MovieListSkeleton />}
-        
-        {movies.length > 0 && (
-            <MovieGrid
-                movies={movies}
-                onSelectMovie={onSelectMovie}
-                favoriteIds={favoriteIds}
-                onToggleFavorite={onToggleFavorite}
-                watchlistIds={watchlistIds}
-                onToggleWatchlist={onToggleWatchlist}
-            />
+        {error && movies.length === 0 ? (
+          <ErrorDisplay message={error} onRetry={() => loadMovies(1)} />
+        ) : isLoading && movies.length === 0 ? (
+          <MovieListSkeleton />
+        ) : (
+          <MovieGrid
+              movies={movies}
+              onSelectMovie={onSelectMovie}
+              favoriteIds={favoriteIds}
+              onToggleFavorite={onToggleFavorite}
+              watchlistIds={watchlistIds}
+              onToggleWatchlist={onToggleWatchlist}
+          />
         )}
         
         <div ref={loadMoreRef} className="h-10">

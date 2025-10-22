@@ -36,6 +36,7 @@ import { TrendingPage } from './components/TrendingPage';
 import { SideMenu } from './components/SideMenu';
 import { GenreSuggestionGrid } from './components/GenreSuggestionGrid';
 import { NoResultsDisplay } from './components/NoResultsDisplay';
+import { ErrorDisplay } from './components/ErrorDisplay';
 
 export type Theme = 'light' | 'dark';
 export type ActiveTab = 'movies' | 'tvshows' | 'search' | 'favorites' | 'watchlist' | 'trending' | 'discover';
@@ -81,6 +82,7 @@ function App() {
   const [searchedMovies, setSearchedMovies] = useState<Movie[]>([]);
   const [searchedTvShows, setSearchedTvShows] = useState<TVShow[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   
   // Modal State
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
@@ -168,46 +170,59 @@ function App() {
       setActionAdventureTvShows(actAdvTv.results);
       setSciFiFantasyTvShows(sciFiTv.results);
     } catch (err) {
-      setError(t('failedToLoadMovies'));
+      const error = err as Error;
+      setError(error.message);
       console.error(err);
     } finally {
       setIsLoading(false);
     }
-  }, [language, t]);
+  }, [language]);
   
   useEffect(() => {
     fetchAllInitialData();
   }, [fetchAllInitialData]);
 
+  const performSearch = useCallback(async () => {
+    if (searchQuery.trim().length < 2) {
+      setSearchedMovies([]);
+      setSearchedTvShows([]);
+      return;
+    }
+    setIsSearching(true);
+    setSearchError(null);
+    try {
+      const [movieResults, tvShowResults] = await Promise.all([
+        searchMovies(searchQuery, 1, language),
+        searchTvShows(searchQuery, 1, language)
+      ]);
+      setSearchedMovies(movieResults.results);
+      setSearchedTvShows(tvShowResults.results);
+    } catch (err) {
+      const error = err as Error;
+      setSearchError(error.message || t('failedToFetchDetails'));
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchQuery, language, t]);
+
   // Search effect with debounce
   useEffect(() => {
     if (activeTab !== 'search') return;
-
+    
     if (searchQuery.trim().length < 2) {
       setSearchedMovies([]);
       setSearchedTvShows([]);
       setIsSearching(false);
+      setSearchError(null);
       return;
     }
 
-    const searchTimer = setTimeout(async () => {
-      setIsSearching(true);
-      try {
-        const [movieResults, tvShowResults] = await Promise.all([
-          searchMovies(searchQuery, 1, language),
-          searchTvShows(searchQuery, 1, language)
-        ]);
-        setSearchedMovies(movieResults.results);
-        setSearchedTvShows(tvShowResults.results);
-      } catch (err) {
-        setError(t('failedToFetchDetails'));
-      } finally {
-        setIsSearching(false);
-      }
-    }, 500); // 500ms debounce
+    const searchTimer = setTimeout(() => {
+      performSearch();
+    }, 500);
 
     return () => clearTimeout(searchTimer);
-  }, [searchQuery, activeTab, language, t]);
+  }, [searchQuery, activeTab, performSearch]);
 
   // Effect to fetch details for list pages (Favorites, Watchlist)
   useEffect(() => {
@@ -230,6 +245,7 @@ function App() {
           setWatchlistTvShows(tvShowDetails);
         }
       } catch (err) {
+        console.error(err);
         setError(t('failedToFetchList'));
       } finally {
         setIsListLoading(false);
@@ -251,6 +267,7 @@ function App() {
       setSearchQuery('');
       setSearchedMovies([]);
       setSearchedTvShows([]);
+      setSearchError(null);
     }
      if (activeTab !== 'movies' && activeTab !== 'tvshows') {
       setActiveView({ type: 'main' });
@@ -296,7 +313,7 @@ function App() {
       const details = await getMovieDetails(movie.id, language);
       setSelectedMovie({ ...details, playOnMount: options?.playTrailer });
     } catch(err) {
-      setError(t('failedToFetchDetails'));
+      console.error(err);
       setSelectedMovie({ ...movie, playOnMount: options?.playTrailer });
     }
   };
@@ -306,7 +323,7 @@ function App() {
       const details = await getTvShowDetails(tvShow.id, language);
       setSelectedTvShow({ ...details, playOnMount: options?.playTrailer });
     } catch(err) {
-      setError(t('failedToFetchDetails'));
+      console.error(err);
       setSelectedTvShow({ ...tvShow, playOnMount: options?.playTrailer }); 
     }
   };
@@ -329,7 +346,8 @@ function App() {
       const allMovies = [...credits.cast, ...credits.crew].filter(m => m.poster_path).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
       setPersonDetails({ ...details, movies: Array.from(new Map(allMovies.map(m => [m.id, m])).values()) });
     } catch (err) {
-      setError(t('failedToFetchDetails')); document.body.style.overflow = 'auto';
+      console.error(err);
+      document.body.style.overflow = 'auto';
     } finally {
       setIsPersonLoading(false);
     }
@@ -339,7 +357,6 @@ function App() {
   
   const handleSurpriseMe = async () => {
     setIsSurpriseLoading(true);
-    setError(null);
     try {
       const movieFetchers = [
         getPopularMovies,
@@ -368,7 +385,6 @@ function App() {
         throw new Error('Randomly selected page had no movies.');
       }
     } catch (err) {
-      setError(t('couldNotFetchRandom'));
       console.error(err);
     } finally {
       setIsSurpriseLoading(false);
@@ -457,7 +473,7 @@ function App() {
   const renderSearchPage = () => {
     const hasSearchQuery = searchQuery.trim().length > 1;
     const hasResults = searchedMovies.length > 0 || searchedTvShows.length > 0;
-    const noResultsFound = hasSearchQuery && !isSearching && !hasResults;
+    const noResultsFound = hasSearchQuery && !isSearching && !hasResults && !searchError;
     const showInitialState = !searchQuery.trim() && !isSearching && !hasResults;
 
     const handleGenreSuggestionClick = (genreName: string) => {
@@ -478,6 +494,8 @@ function App() {
             )}
             
             {isSearching && <div className="mt-8"><Loader /></div>}
+
+            {searchError && <div className="mt-8"><ErrorDisplay message={searchError} onRetry={performSearch} /></div>}
             
             {noResultsFound && (
                 <NoResultsDisplay 
@@ -595,6 +613,7 @@ function App() {
   };
 
   const backgroundPattern = "dark:bg-[url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3e%3cpath d='M0 40L40 0H20L0 20M40 40V20L20 40' fill='%231e293b' fill-opacity='0.3'/%3e%3c/svg%3e\")]";
+  const initialLoadFailed = error && !isLoading && popularMovies.length === 0 && popularTvShows.length === 0;
 
   return (
     <div className={`bg-slate-100 dark:bg-[#0F172A] min-h-screen font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300 ${backgroundPattern}`}>
@@ -617,8 +636,13 @@ function App() {
       />
       
       <main className="pb-24 sm:pb-8">
-        {error && <p className="text-red-500 text-center">{error}</p>}
-        {renderContent()}
+        {initialLoadFailed ? (
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28">
+            <ErrorDisplay message={error} onRetry={fetchAllInitialData} />
+          </div>
+        ) : (
+          renderContent()
+        )}
       </main>
 
       <Footer />

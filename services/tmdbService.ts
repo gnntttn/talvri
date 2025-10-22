@@ -8,7 +8,25 @@ const fetchFromTmdb = async <T,>(endpoint: string, language: string = 'en-US'): 
   const url = `${TMDB_BASE_URL}/${endpoint}${separator}api_key=${TMDB_API_KEY}&language=${language}`;
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to fetch from TMDB: ${response.statusText}`);
+    let errorMessage = `Failed to fetch from TMDB: ${response.statusText}`;
+    try {
+      const errorData = await response.json();
+      if (errorData && errorData.status_message) {
+        switch (response.status) {
+          case 401:
+            errorMessage = `Authentication failed: ${errorData.status_message}. Please check if your TMDB API key is valid.`;
+            break;
+          case 404:
+            errorMessage = `The requested resource was not found: ${errorData.status_message}`;
+            break;
+          default:
+            errorMessage = `Error ${response.status}: ${errorData.status_message}`;
+        }
+      }
+    } catch (e) {
+      // Could not parse JSON, stick with the original error message
+    }
+    throw new Error(errorMessage);
   }
   return response.json() as Promise<T>;
 };
