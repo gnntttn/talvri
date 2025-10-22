@@ -51,6 +51,8 @@ const translations = {
     showLess: 'Show Less',
     seasonsAndEpisodes: 'Seasons & Episodes',
     season: 'Season',
+    // Fix: Add 'seasons' translation key to resolve type error.
+    seasons: 'Seasons',
     episode: 'Episode',
     tmdbAttribution: '',
     errorOccurred: 'An error occurred',
@@ -91,6 +93,10 @@ const translations = {
     noResultsFoundFor: "No Results Found for '{query}'",
     tryCheckingSpelling: 'Try checking your spelling or using different keywords.',
     discoverSomethingNew: 'Discover Something New',
+    castAndCrew: 'Cast & Crew',
+    overview: 'Overview',
+    tagline: 'Tagline',
+    episodes: 'Episodes',
   },
   ar: {
     appName: 'talvri',
@@ -141,6 +147,8 @@ const translations = {
     showLess: 'عرض أقل',
     seasonsAndEpisodes: 'المواسم والحلقات',
     season: 'الموسم',
+    // Fix: Add 'seasons' translation key to resolve type error.
+    seasons: 'مواسم',
     episode: 'حلقة',
     tmdbAttribution: '',
     errorOccurred: 'حدث خطأ',
@@ -181,6 +189,10 @@ const translations = {
     noResultsFoundFor: "لم يتم العثور على نتائج لـ '{query}'",
     tryCheckingSpelling: 'حاول التحقق من الإملاء أو استخدام كلمات رئيسية مختلفة.',
     discoverSomethingNew: 'اكتشف شيئًا جديدًا',
+    castAndCrew: 'الممثلون والطاقم',
+    overview: 'نظرة عامة',
+    tagline: 'شعار',
+    episodes: 'حلقات',
   }
 };
 

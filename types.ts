@@ -10,6 +10,8 @@ export interface Movie {
   vote_average: number;
   genre_ids: number[];
   genres?: Genre[];
+  runtime: number | null;
+  tagline: string | null;
   // Appended data
   videos?: { results: Video[] };
   ['watch/providers']?: WatchProviderResponse;
@@ -31,6 +33,8 @@ export interface TVShow {
   genre_ids: number[];
   genres?: Genre[];
   seasons?: Season[];
+  number_of_seasons?: number;
+  number_of_episodes?: number;
   // Appended data
   videos?: { results: Video[] };
   ['watch/providers']?: WatchProviderResponse;

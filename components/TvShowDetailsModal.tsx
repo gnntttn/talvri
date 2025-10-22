@@ -1,10 +1,12 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import type { TVShow, WatchProviderDetails, Cast, Crew, Review, SeasonDetails, Episode } from '../types';
 import { TMDB_IMAGE_BASE_URL } from '../constants';
 import { getSimilarTvShows, getTvShowSeasonDetails } from '../services/tmdbService';
 import { useTranslation } from '../contexts/LanguageContext';
 import { Loader } from './Loader';
+import { RatingCircle } from './RatingCircle';
+
+type ActiveTab = 'overview' | 'cast' | 'seasons' | 'watch' | 'reviews';
 
 interface TvShowDetailsModalProps {
   tvShow: TVShow;
@@ -37,8 +39,8 @@ const BookmarkIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 const PlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
-        <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.647c1.295.742 1.295 2.545 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
+        <path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11V15.89a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84Z" />
     </svg>
 );
 
@@ -46,6 +48,16 @@ const StarIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
         <path fillRule="evenodd" d="M10.868 2.884c.321-.662 1.215-.662 1.536 0l1.83 3.751 4.145.604c.731.107 1.023 1.005.494 1.521l-2.998 2.922.708 4.129c.125.728-.638 1.285-1.29.948L10 14.85l-3.713 1.952c-.652.337-1.415-.22-1.29-.948l.708-4.129-2.998-2.922c-.529-.516-.237-1.414.494-1.521l4.145-.604 1.83-3.751Z" clipRule="evenodd" />
     </svg>
+);
+
+const TabButton: React.FC<{ label: string; isActive: boolean; onClick: () => void; }> = ({ label, isActive, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`px-4 py-2 text-sm sm:text-base font-semibold transition-colors duration-200 relative ${isActive ? 'text-violet-500' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'}`}
+    >
+        {label}
+        {isActive && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500 rounded-full" />}
+    </button>
 );
 
 const MiniTvShowCard: React.FC<{ tvShow: TVShow; onSelect: (tvShow: TVShow) => void }> = ({ tvShow, onSelect }) => {
@@ -66,29 +78,34 @@ const MiniTvShowCard: React.FC<{ tvShow: TVShow; onSelect: (tvShow: TVShow) => v
   )
 };
 
-const PersonCard: React.FC<{
-    person: Cast | Crew;
-    onSelect: (personId: number) => void;
-    subtitle: string;
-}> = ({ person, onSelect, subtitle }) => {
-    const imageUrl = person.profile_path ? `${TMDB_IMAGE_BASE_URL}/w200${person.profile_path}` : null;
-    return (
-        <button className="flex-shrink-0 w-32 text-center group transition-transform duration-200 hover:-translate-y-1" onClick={() => onSelect(person.id)}>
-            <div className="relative">
-                {imageUrl ? (
-                    <img src={imageUrl} alt={person.name} className="w-32 h-40 object-cover rounded-md shadow-md mx-auto transition-shadow duration-200 group-hover:shadow-lg" />
-                ) : (
-                    <div className="w-32 h-40 bg-slate-200 dark:bg-slate-700 rounded-md flex items-center justify-center mx-auto shadow-md transition-shadow duration-200 group-hover:shadow-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-slate-400">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                        </svg>
-                    </div>
-                )}
-            </div>
-            <h4 className="text-sm font-bold mt-2 truncate text-slate-800 dark:text-slate-200">{person.name}</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{subtitle}</p>
-        </button>
-    )
+const CreditListItem: React.FC<{
+  person: Cast | Crew;
+  subtitle: string;
+  onSelect: (personId: number) => void;
+}> = ({ person, subtitle, onSelect }) => {
+  const imageUrl = person.profile_path ? `${TMDB_IMAGE_BASE_URL}/w200${person.profile_path}` : null;
+  return (
+    <button
+      onClick={() => onSelect(person.id)}
+      className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors w-full text-left rtl:text-right"
+    >
+      <div className="flex-shrink-0">
+        {imageUrl ? (
+          <img src={imageUrl} alt={person.name} className="w-12 h-12 rounded-full object-cover" />
+        ) : (
+          <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+            </svg>
+          </div>
+        )}
+      </div>
+      <div>
+        <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-1">{person.name}</h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{subtitle}</p>
+      </div>
+    </button>
+  );
 };
 
 const ProvidersSection: React.FC<{providers: WatchProviderDetails[]; title: string}> = ({ providers, title }) => (
@@ -207,12 +224,12 @@ const EpisodeCard: React.FC<{ episode: Episode }> = ({ episode }) => {
 
 export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, onClose, isFavorite, onToggleFavorite, isWatchlisted, onToggleWatchlist, onSelectSimilarTvShow, onSelectPerson, playOnMount = false }) => {
   const { language, t } = useTranslation();
-  const backdropUrl = tvShow.backdrop_path
-    ? `${TMDB_IMAGE_BASE_URL}/w1280${tvShow.backdrop_path}`
-    : tvShow.poster_path ? `${TMDB_IMAGE_BASE_URL}/w1280${tvShow.poster_path}` : undefined;
-  
+  const backdropUrl = tvShow.backdrop_path ? `${TMDB_IMAGE_BASE_URL}/w1280${tvShow.backdrop_path}` : tvShow.poster_path ? `${TMDB_IMAGE_BASE_URL}/w1280${tvShow.poster_path}` : undefined;
+  const posterUrl = tvShow.poster_path ? `${TMDB_IMAGE_BASE_URL}/w500${tvShow.poster_path}` : null;
+
   const [similarTvShows, setSimilarTvShows] = useState<TVShow[]>([]);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number | null>(null);
   const [seasonDetails, setSeasonDetails] = useState<SeasonDetails | null>(null);
@@ -220,73 +237,56 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
 
   const trailer = tvShow.videos?.results.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'));
   const providers = tvShow['watch/providers']?.results.US;
-  const cast = tvShow.credits?.cast.slice(0, 15);
-  const creator = tvShow.credits?.crew.find(member => member.job === 'Creator');
   const reviews = tvShow.reviews?.results;
+  const firstAirYear = tvShow.first_air_date ? tvShow.first_air_date.split('-')[0] : null;
+
+  const topCredits = React.useMemo(() => {
+    if (!tvShow.credits) return { crew: [], cast: [] };
+    const { cast, crew } = tvShow.credits;
+    const creators = crew.filter(member => member.job === 'Creator').slice(0, 3);
+    const topCast = cast.slice(0, 10 - creators.length);
+    return { crew: creators, cast: topCast };
+  }, [tvShow.credits]);
 
   const stopTrailer = () => {
-    if (iframeRef.current) {
-      iframeRef.current.src = '';
-    }
+    if (iframeRef.current) iframeRef.current.src = '';
     setShowTrailer(false);
   };
 
   const handleClose = () => {
-    if (showTrailer) {
-      stopTrailer();
-    }
+    if (showTrailer) stopTrailer();
     onClose();
   };
   
   useEffect(() => {
-    if (playOnMount && trailer) {
-        setShowTrailer(true);
-    }
+    if (playOnMount && trailer) setShowTrailer(true);
   }, [playOnMount, trailer]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        if (showTrailer) {
-            stopTrailer();
-        } else {
-            onClose();
-        }
+        if (showTrailer) stopTrailer(); else onClose();
       }
     };
     window.addEventListener('keydown', handleEsc);
     document.body.style.overflow = 'hidden';
 
-    if (!playOnMount) {
-        setShowTrailer(false);
-    }
+    if (!playOnMount) setShowTrailer(false);
     setSelectedSeasonNumber(null);
     setSeasonDetails(null);
 
     if (tvShow.seasons && tvShow.seasons.length > 0) {
-        const airedSeasons = tvShow.seasons
-            .filter(s => s.season_number > 0 && s.air_date && new Date(s.air_date) <= new Date())
-            .sort((a, b) => b.season_number - a.season_number);
-        
-        if (airedSeasons.length > 0) {
-            setSelectedSeasonNumber(airedSeasons[0].season_number);
-        } else {
+        const airedSeasons = tvShow.seasons.filter(s => s.season_number > 0 && s.air_date && new Date(s.air_date) <= new Date()).sort((a, b) => b.season_number - a.season_number);
+        if (airedSeasons.length > 0) setSelectedSeasonNumber(airedSeasons[0].season_number);
+        else {
             const nonSpecialSeasons = tvShow.seasons.filter(s => s.season_number > 0);
-            if (nonSpecialSeasons.length > 0) {
-                setSelectedSeasonNumber(nonSpecialSeasons[0].season_number);
-            }
+            if (nonSpecialSeasons.length > 0) setSelectedSeasonNumber(nonSpecialSeasons[0].season_number);
         }
     }
 
-    const fetchSimilar = async () => {
-        try {
-            const data = await getSimilarTvShows(tvShow.id, 1, language);
-            setSimilarTvShows(data.results.slice(0, 10));
-        } catch(err) {
-            console.error("Failed to fetch similar tv shows", err);
-        }
-    };
-    fetchSimilar();
+    getSimilarTvShows(tvShow.id, 1, language)
+        .then(data => setSimilarTvShows(data.results.slice(0, 10)))
+        .catch(err => console.error("Failed to fetch similar tv shows", err));
 
     return () => {
       window.removeEventListener('keydown', handleEsc);
@@ -296,7 +296,6 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
 
   useEffect(() => {
     if (selectedSeasonNumber === null) return;
-
     const fetchSeasonDetails = async () => {
         setIsSeasonLoading(true);
         try {
@@ -309,217 +308,180 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
             setIsSeasonLoading(false);
         }
     };
-
     fetchSeasonDetails();
   }, [tvShow.id, selectedSeasonNumber, language]);
+
+  const renderTabContent = () => {
+    switch(activeTab) {
+        case 'overview':
+            return (
+                <div className="space-y-8">
+                    <div>
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">{t('overview')}</h3>
+                        <p className="text-slate-600 dark:text-slate-300 text-sm">{tvShow.overview}</p>
+                    </div>
+                     {similarTvShows.length > 0 && (
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">{t('youMightAlsoLike')}</h3>
+                            <div className="flex space-x-4 rtl:space-x-reverse overflow-x-auto pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">
+                                {similarTvShows.map(s => <MiniTvShowCard key={s.id} tvShow={s} onSelect={onSelectSimilarTvShow} />)}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        case 'cast':
+             return (
+                (topCredits.crew.length > 0 || topCredits.cast.length > 0) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                        {topCredits.crew.map(member => <CreditListItem key={`crew-${member.id}`} person={member} subtitle={t('creator')} onSelect={onSelectPerson} />)}
+                        {topCredits.cast.map(member => <CreditListItem key={`cast-${member.id}`} person={member} subtitle={member.character} onSelect={onSelectPerson} />)}
+                    </div>
+                )
+            );
+        case 'seasons':
+            const availableSeasons = tvShow.seasons?.filter(s => s.season_number > 0 && s.episode_count > 0);
+            return availableSeasons && availableSeasons.length > 0 ? (
+                <div>
+                    <select
+                        value={selectedSeasonNumber || ''}
+                        onChange={(e) => setSelectedSeasonNumber(Number(e.target.value))}
+                        className="w-full sm:w-auto rounded-md border-0 bg-slate-100 dark:bg-slate-700 py-1.5 pl-3 pr-8 rtl:pr-3 rtl:pl-8 text-slate-900 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 text-sm mb-4"
+                        aria-label={t('season')}
+                    >
+                        {availableSeasons.map(s => <option key={s.id} value={s.season_number}>{s.name}</option>)}
+                    </select>
+                    {isSeasonLoading && <div className="flex justify-center items-center py-8"><Loader /></div>}
+                    {!isSeasonLoading && seasonDetails && (
+                        <div className="max-h-96 overflow-y-auto space-y-3 -mr-2 pr-2">
+                            {seasonDetails.episodes.map(episode => <EpisodeCard key={episode.id} episode={episode} />)}
+                        </div>
+                    )}
+                </div>
+            ) : null;
+        case 'watch':
+            return (
+                 providers && (providers.flatrate || providers.buy || providers.rent) ? (
+                    <div className="flex flex-col sm:flex-row gap-6">
+                        {providers.flatrate && <ProvidersSection providers={providers.flatrate} title={t('stream')} />}
+                        {providers.buy && <ProvidersSection providers={providers.buy} title={t('buy')} />}
+                        {providers.rent && <ProvidersSection providers={providers.rent} title={t('rent')} />}
+                    </div>
+                ) : <p className="text-slate-500 dark:text-slate-400 text-sm">{t('noMoviesFound')}</p>
+            );
+        case 'reviews':
+             return (
+                 reviews && reviews.length > 0 ? (
+                    <div className="max-h-96 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-200 dark:divide-slate-700 -m-2">
+                        {reviews.map(review => <ReviewCard key={review.id} review={review} />)}
+                    </div>
+                ) : <p className="text-slate-500 dark:text-slate-400 text-sm">{t('noReviewsFound')}</p>
+            )
+    }
+  }
 
 
   return (
     <>
     <div 
-        className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-fade-in"
+        className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-0 sm:p-4 animate-fade-in"
         onClick={handleClose}
     >
       <div 
-        className="bg-white dark:bg-slate-800 rounded-lg overflow-y-auto max-h-[90vh] shadow-xl max-w-4xl w-full relative transform transition-all duration-300 animate-slide-up text-left rtl:text-right"
+        className="bg-slate-50 dark:bg-slate-800 rounded-none sm:rounded-lg overflow-y-auto max-h-screen sm:max-h-[95vh] shadow-xl max-w-4xl w-full relative transform transition-all duration-300 animate-slide-up text-left rtl:text-right"
         onClick={(e) => e.stopPropagation()}
       >
         <button 
             onClick={handleClose} 
-            className="absolute top-3 right-3 rtl:left-3 rtl:right-auto z-20 p-1 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+            className="absolute top-3 right-3 rtl:left-3 rtl:right-auto z-30 p-1 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
             aria-label={t('closeModal')}
         >
           <CloseIcon className="w-6 h-6" />
         </button>
 
-        <div className="relative h-56 sm:h-64 md:h-96 bg-slate-900 overflow-hidden">
+        <div className="relative h-[45vh] bg-slate-900 overflow-hidden">
             <div className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${showTrailer ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 {backdropUrl && (
-                    <img src={backdropUrl} alt={tvShow.name} className="w-full h-full object-cover" />
+                    <img src={backdropUrl} alt={tvShow.name} className="w-full h-full object-cover opacity-50" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-800 via-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-50 dark:from-slate-800 via-slate-50/50 dark:via-slate-800/50 to-transparent" />
                 
-                {trailer && !showTrailer && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <button
-                            onClick={() => setShowTrailer(true)}
-                            className="group flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50"
-                            aria-label={t('playTrailer')}
-                        >
-                            <PlayIcon className="w-10 h-10 sm:w-12 sm:h-12 text-white/80 group-hover:text-white transition-colors" />
-                        </button>
+                <div className="absolute bottom-0 left-0 rtl:right-0 w-full px-4 sm:px-6 pb-4">
+                  <div className="flex items-end gap-4">
+                    <div className="w-32 md:w-40 flex-shrink-0 -mb-8">
+                       {posterUrl && <img src={posterUrl} alt={tvShow.name} className="w-full rounded-md shadow-2xl object-cover" />}
                     </div>
-                )}
-
-                <div className="absolute bottom-0 left-0 rtl:right-0 p-4 sm:p-6 w-full">
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white shadow-lg">{tvShow.name}</h2>
+                     <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white shadow-lg pb-2">{tvShow.name}</h2>
+                  </div>
                 </div>
             </div>
 
             {trailer && (
                 <div className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${showTrailer ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                     {showTrailer && (
-                        <iframe
-                            ref={iframeRef}
-                            src={`https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1&rel=0`}
-                            title={trailer.name}
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="w-full h-full"
-                        ></iframe>
+                        <iframe ref={iframeRef} src={`https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1&rel=0`} title={trailer.name} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full"></iframe>
                     )}
                 </div>
             )}
         </div>
 
-        <div className="p-4 sm:p-6">
-            <div className="flex justify-between items-start gap-4">
-                <div className="flex-grow">
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        {tvShow.genres?.map(genre => (
-                            <span key={genre.id} className="text-xs font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200 px-2.5 py-1 rounded-full">{genre.name}</span>
-                        ))}
+        <div className="px-4 sm:px-6 pt-12 pb-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <RatingCircle rating={tvShow.vote_average} />
+                    <div className="text-sm text-slate-600 dark:text-slate-400 font-medium space-x-3 rtl:space-x-reverse">
+                        <span>{firstAirYear}</span>
+                        {tvShow.number_of_seasons && <><span>•</span><span>{tvShow.number_of_seasons} {t('seasons')}</span></>}
+                        {tvShow.number_of_episodes && <><span>•</span><span>{tvShow.number_of_episodes} {t('episodes')}</span></>}
                     </div>
-                    <p className="text-slate-600 dark:text-slate-300 mb-4">{tvShow.overview}</p>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center gap-2 flex-shrink-0 -mt-2">
-                    <button 
-                        onClick={() => onToggleWatchlist(tvShow)}
-                        className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                        aria-label={isWatchlisted ? t('removeFromWatchlist', { title: tvShow.name }) : t('addToWatchlist', { title: tvShow.name })}
-                    >
-                        <BookmarkIcon
-                            className={`w-7 h-7 ${isWatchlisted ? 'text-indigo-500' : 'text-slate-500 dark:text-slate-400'}`}
-                            fill={isWatchlisted ? 'currentColor' : 'none'}
-                            stroke="currentColor"
-                        />
-                    </button>
-                    <button 
-                        onClick={() => onToggleFavorite(tvShow)}
-                        className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                        aria-label={isFavorite ? t('removeFromFavorites', { title: tvShow.name }) : t('addToFavorites', { title: tvShow.name })}
-                    >
-                        <HeartIcon 
-                            className={`w-7 h-7 ${isFavorite ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`}
-                            fill={isFavorite ? 'currentColor' : 'none'}
-                            stroke="currentColor"
-                        />
-                    </button>
-                </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 rtl:sm:space-x-reverse space-y-2 sm:space-y-0 text-sm text-slate-500 dark:text-slate-400 mb-6">
-                <span>{t('firstAirDate')} <span className="font-semibold text-slate-700 dark:text-slate-200">{tvShow.first_air_date}</span></span>
-                <span>{t('rating')} <span className="font-semibold text-slate-700 dark:text-slate-200">{(tvShow.vote_average || 0).toFixed(1)} / 10</span></span>
-            </div>
-            
-            {providers && (providers.flatrate || providers.buy || providers.rent) && (
-                <div className="mb-8">
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">{t('whereToWatch')}</h3>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        {providers.flatrate && <ProvidersSection providers={providers.flatrate} title={t('stream')} />}
-                        {providers.buy && <ProvidersSection providers={providers.buy} title={t('buy')} />}
-                        {providers.rent && <ProvidersSection providers={providers.rent} title={t('rent')} />}
-                    </div>
-                </div>
-            )}
-
-            {creator && (
-                <div className="mb-8">
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">{t('creator')}</h3>
-                    <PersonCard person={creator} onSelect={onSelectPerson} subtitle={t('creator')} />
-                </div>
-            )}
-            
-            {tvShow.seasons && tvShow.seasons.filter(s => s.season_number > 0 && s.episode_count > 0).length > 0 && (
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white">{t('seasonsAndEpisodes')}</h3>
-                        <select
-                            value={selectedSeasonNumber || ''}
-                            onChange={(e) => setSelectedSeasonNumber(Number(e.target.value))}
-                            className="rounded-md border-0 bg-slate-100 dark:bg-slate-700 py-1.5 pl-3 pr-8 rtl:pr-3 rtl:pl-8 text-slate-900 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm text-sm"
-                            aria-label={t('season')}
-                        >
-                            {tvShow.seasons
-                                .filter(s => s.season_number > 0 && s.episode_count > 0)
-                                .map(s => (
-                                    <option key={s.id} value={s.season_number}>{s.name}</option>
-                            ))}
-                        </select>
-                    </div>
-                    
-                    {isSeasonLoading && (
-                        <div className="flex justify-center items-center py-8">
-                            <Loader />
-                        </div>
-                    )}
-
-                    {!isSeasonLoading && seasonDetails && (
-                        <div className="max-h-96 overflow-y-auto space-y-3 -mr-2 pr-2">
-                            {seasonDetails.episodes.map(episode => (
-                                <EpisodeCard key={episode.id} episode={episode} />
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-
-
-            {cast && cast.length > 0 && (
-                <div className="mb-8">
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">{t('cast')}</h3>
-                    <div className="flex space-x-4 rtl:space-x-reverse overflow-x-auto pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">
-                        {cast.map(member => <PersonCard key={member.id} person={member} onSelect={onSelectPerson} subtitle={member.character} />)}
-                    </div>
-                </div>
-            )}
-
-            {similarTvShows.length > 0 && (
-                <div className="mt-8">
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">{t('youMightAlsoLike')}</h3>
-                    <div className="flex space-x-4 rtl:space-x-reverse overflow-x-auto pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">
-                        {similarTvShows.map(s => (
-                            <MiniTvShowCard key={s.id} tvShow={s} onSelect={onSelectSimilarTvShow} />
+                    <div className="flex flex-wrap gap-2 pt-2 sm:pt-0">
+                        {tvShow.genres?.slice(0,3).map(genre => (
+                            <span key={genre.id} className="text-xs font-semibold bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200 px-2.5 py-1 rounded-full">{genre.name}</span>
                         ))}
                     </div>
                 </div>
-            )}
-
-            {reviews && (
-                <div className="mt-8">
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">{t('reviews')}</h3>
-                    {reviews.length > 0 ? (
-                        <div className="max-h-96 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-200 dark:divide-slate-700">
-                            {reviews.map(review => <ReviewCard key={review.id} review={review} />)}
-                        </div>
-                    ) : (
-                        <p className="text-slate-500 dark:text-slate-400 text-sm bg-slate-100 dark:bg-slate-800/50 p-4 rounded-lg">{t('noReviewsFound')}</p>
+                 <div className="flex items-center gap-2 flex-shrink-0">
+                    {trailer && (
+                        <button onClick={() => setShowTrailer(true)} className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors text-sm font-semibold">
+                            <PlayIcon className="w-5 h-5" />
+                            <span>{t('playTrailer')}</span>
+                        </button>
                     )}
+                    <button onClick={() => onToggleWatchlist(tvShow)} className="p-2 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors" aria-label={isWatchlisted ? t('removeFromWatchlist', { title: tvShow.name }) : t('addToWatchlist', { title: tvShow.name })}>
+                        <BookmarkIcon className={`w-5 h-5 ${isWatchlisted ? 'text-violet-500' : 'text-slate-600 dark:text-slate-300'}`} fill={isWatchlisted ? 'currentColor' : 'none'} stroke="currentColor" />
+                    </button>
+                    <button onClick={() => onToggleFavorite(tvShow)} className="p-2 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors" aria-label={isFavorite ? t('removeFromFavorites', { title: tvShow.name }) : t('addToFavorites', { title: tvShow.name })}>
+                        <HeartIcon className={`w-5 h-5 ${isFavorite ? 'text-red-500' : 'text-slate-600 dark:text-slate-300'}`} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" />
+                    </button>
                 </div>
-            )}
+            </div>
+
+            <div className="mt-6 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex space-x-2 rtl:space-x-reverse -mb-px overflow-x-auto">
+                   <TabButton label={t('overview')} isActive={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
+                   <TabButton label={t('castAndCrew')} isActive={activeTab === 'cast'} onClick={() => setActiveTab('cast')} />
+                   <TabButton label={t('seasonsAndEpisodes')} isActive={activeTab === 'seasons'} onClick={() => setActiveTab('seasons')} />
+                   <TabButton label={t('whereToWatch')} isActive={activeTab === 'watch'} onClick={() => setActiveTab('watch')} />
+                   <TabButton label={t('reviews')} isActive={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} />
+                </div>
+            </div>
+
+            <div className="pt-6">
+                {renderTabContent()}
+            </div>
         </div>
+
       </div>
     </div>
      <style>{`
-        @keyframes fade-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
-        }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
         
-        @keyframes slide-up {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-        }
+        @keyframes slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
-         .line-clamp-2 {
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
-        }
+        
+        .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+        .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
     `}</style>
     </>
   );
