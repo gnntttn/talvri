@@ -31,6 +31,7 @@ import { MovieSliderSkeleton } from './components/MovieSliderSkeleton';
 import { TvShowHeroSlider } from './components/TvShowHeroSlider';
 import { DiscoverPage } from './components/DiscoverPage';
 import { TrendingPage } from './components/TrendingPage';
+import { SideMenu } from './components/SideMenu';
 
 export type Theme = 'light' | 'dark';
 export type ActiveTab = 'movies' | 'tvshows' | 'search' | 'favorites' | 'watchlist' | 'trending' | 'discover';
@@ -55,6 +56,7 @@ function App() {
   const [activeView, setActiveView] = useState<ActiveView>({ type: 'main' });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
 
   // Data State
   const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
@@ -351,6 +353,11 @@ function App() {
     }
   };
 
+  const handleSetActiveTab = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    setIsSideMenuOpen(false);
+  };
+
   const onHeroPage = (activeTab === 'movies' || activeTab === 'tvshows') && activeView.type === 'main';
 
   // --- Content Rendering ---
@@ -541,6 +548,14 @@ function App() {
         onSurpriseMe={handleSurpriseMe}
         isSurpriseLoading={isSurpriseLoading}
         onHeroPage={onHeroPage}
+        onMenuClick={() => setIsSideMenuOpen(true)}
+      />
+
+      <SideMenu
+        isOpen={isSideMenuOpen}
+        onClose={() => setIsSideMenuOpen(false)}
+        activeTab={activeTab}
+        setActiveTab={handleSetActiveTab}
       />
       
       <main className="pb-24 sm:pb-8">

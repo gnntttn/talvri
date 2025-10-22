@@ -47,6 +47,11 @@ const FireIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
       <path fillRule="evenodd" d="M5.385 6.53a.75.75 0 0 0-1.127.172 9.493 9.493 0 0 0-1.5 8.283c.381 1.43 1.568 2.51 3.013 2.768a9.5 9.5 0 0 0 9.22-2.395.75.75 0 1 0-1.13-1.004 8.002 8.002 0 0 1-7.734 2.12c-.99-.17-1.81-.828-2.072-1.789a8 8 0 0 1 1.282-7.005.75.75 0 0 0-.254-.928Z" clipRule="evenodd" />
     </svg>
 );
+const MenuIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
+        <path fillRule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+    </svg>
+);
 
 interface HeaderProps {
   theme: Theme;
@@ -56,6 +61,7 @@ interface HeaderProps {
   onSurpriseMe: () => void;
   isSurpriseLoading: boolean;
   onHeroPage: boolean;
+  onMenuClick: () => void;
 }
 
 const NavItem: React.FC<{
@@ -90,7 +96,7 @@ const NavItem: React.FC<{
 };
 
 
-export const Header: React.FC<HeaderProps> = ({ theme, setTheme, activeTab, setActiveTab, onSurpriseMe, isSurpriseLoading, onHeroPage }) => {
+export const Header: React.FC<HeaderProps> = ({ theme, setTheme, activeTab, setActiveTab, onSurpriseMe, isSurpriseLoading, onHeroPage, onMenuClick }) => {
   const { t, language, setLanguage } = useTranslation();
 
   const toggleLanguage = () => {
@@ -128,11 +134,18 @@ export const Header: React.FC<HeaderProps> = ({ theme, setTheme, activeTab, setA
     ? "p-2 rounded-full text-slate-300 hover:bg-white/10 hover:text-white transition-colors text-sm font-bold w-9 h-9 flex items-center justify-center"
     : "p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-bold w-9 h-9 flex items-center justify-center";
 
+  const menuButtonClasses = onHeroPage
+    ? "p-2 rounded-full text-white hover:bg-white/10"
+    : "p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800/60";
+
   return (
     <header className={headerClasses}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
+                <button onClick={onMenuClick} className={`md:hidden ${menuButtonClasses}`} aria-label={t('menu')}>
+                    <MenuIcon className="w-6 h-6" />
+                </button>
                 <h1 className={`text-3xl font-bold tracking-wider ${onHeroPage ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
                     <span className="text-violet-400">t</span>alvri
                 </h1>
