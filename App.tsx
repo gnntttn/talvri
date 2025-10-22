@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { Movie, Genre, TmdbApiPopularResponse, PersonDetails, TVShow, TmdbApiTvResponse } from './types';
 import { 
@@ -5,7 +6,8 @@ import {
   getNowPlayingMovies, getPersonDetails, 
   getPersonMovieCredits, getPopularTvShows,
   getTvShowDetails, searchTvShows,
-  getTopRatedMovies, getUpcomingMovies, getTopRatedTvShows, getAiringTodayTvShows
+  getTopRatedMovies, getUpcomingMovies, getTopRatedTvShows, getAiringTodayTvShows,
+  discoverMovies
 } from './services/tmdbService';
 import { Header } from './components/Header';
 import { Loader } from './components/Loader';
@@ -45,16 +47,13 @@ function App() {
   
   // UI State
   const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const storedTheme = window.localStorage.getItem('theme');
-      if (storedTheme === 'light' || storedTheme === 'dark') {
-        return storedTheme;
-      }
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-      }
+    // This logic is duplicated from the inline script in index.html to avoid a race condition.
+    // By re-running the logic, we ensure React's initial state matches the user's preference
+    // without relying on the DOM being updated by the script first.
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      return 'dark';
     }
-    return 'light'; // Default to light theme to match inline script
+    return 'light';
   });
   const [activeTab, setActiveTab] = useState<ActiveTab>('movies');
   const [activeView, setActiveView] = useState<ActiveView>({ type: 'main' });
@@ -69,6 +68,8 @@ function App() {
   const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([]);
   const [movieGenres, setMovieGenres] = useState<Genre[]>([]);
   const [tvGenres, setTvGenres] = useState<Genre[]>([]);
+  const [actionMovies, setActionMovies] = useState<Movie[]>([]);
+  const [adventureMovies, setAdventureMovies] = useState<Movie[]>([]);
   
   const [popularTvShows, setPopularTvShows] = useState<TVShow[]>([]);
   const [topRatedTvShows, setTopRatedTvShows] = useState<TVShow[]>([]);
@@ -127,7 +128,7 @@ function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const [pop, top, now, upc, movGenres, tvGen, popTv, topTv, airTv] = await Promise.all([
+      const [pop, top, now, upc, movGenres, tvGen, popTv, topTv, airTv, actMov, advMov] = await Promise.all([
         getPopularMovies(1, language),
         getTopRatedMovies(1, language),
         getNowPlayingMovies(1, language),
@@ -137,6 +138,8 @@ function App() {
         getPopularTvShows(1, language),
         getTopRatedTvShows(1, language),
         getAiringTodayTvShows(1, language),
+        discoverMovies(28, 1, language), // Action
+        discoverMovies(12, 1, language), // Adventure
       ]);
       setPopularMovies(pop.results);
       setTopRatedMovies(top.results);
@@ -147,6 +150,8 @@ function App() {
       setPopularTvShows(popTv.results);
       setTopRatedTvShows(topTv.results);
       setAiringTodayTvShows(airTv.results);
+      setActionMovies(actMov.results);
+      setAdventureMovies(advMov.results);
     } catch (err) {
       setError(t('failedToLoadMovies'));
       console.error(err);
@@ -390,7 +395,9 @@ function App() {
             {isLoading ? <MovieSliderSkeleton /> : (
                 <>
                     <MovieSlider title={t('popular')} movies={popularMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} onViewAll={() => handleViewAllMovies(t('popular'), getPopularMovies)} />
+                    <MovieSlider title={t('action')} movies={actionMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} onViewAll={() => handleViewAllMovies(t('action'), (page, lang) => discoverMovies(28, page, lang))} />
                     <MovieSlider title={t('topRated')} movies={topRatedMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} onViewAll={() => handleViewAllMovies(t('topRated'), getTopRatedMovies)} />
+                     <MovieSlider title={t('adventure')} movies={adventureMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} onViewAll={() => handleViewAllMovies(t('adventure'), (page, lang) => discoverMovies(12, page, lang))} />
                     <MovieSlider title={t('upcoming')} movies={upcomingMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} onViewAll={() => handleViewAllMovies(t('upcoming'), getUpcomingMovies)} />
                 </>
             )}
@@ -542,8 +549,10 @@ function App() {
     }
   };
 
+  const backgroundPattern = "dark:bg-[url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3e%3cpath d='M0 40L40 0H20L0 20M40 40V20L20 40' fill='%231e293b' fill-opacity='0.3'/%3e%3c/svg%3e\")]";
+
   return (
-    <div className="bg-slate-100 dark:bg-[#0F172A] min-h-screen font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300">
+    <div className={`bg-slate-100 dark:bg-[#0F172A] min-h-screen font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300 ${backgroundPattern}`}>
       <Header 
         theme={theme} 
         setTheme={setTheme}

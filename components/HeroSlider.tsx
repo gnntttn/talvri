@@ -3,11 +3,19 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Movie } from '../types';
 import { TMDB_IMAGE_BASE_URL } from '../constants';
 import { useTranslation } from '../contexts/LanguageContext';
+import { RatingCircle } from './RatingCircle';
 
 interface HeroSliderProps {
   movies: Movie[];
   onSelectMovie: (movie: Movie, options?: { playTrailer: boolean }) => void;
 }
+
+const PlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
+        <path fillRule="evenodd" d="M2 10a8 8 0 1 1 16 0 8 8 0 0 1-16 0Zm6.39-2.908a.75.75 0 0 1 .98 0l4.25 3.5a.75.75 0 0 1 0 1.116l-4.25 3.5a.75.75 0 0 1-.98 0V7.092Z" clipRule="evenodd" />
+    </svg>
+);
+
 
 export const HeroSlider: React.FC<HeroSliderProps> = ({ movies, onSelectMovie }) => {
   const { t } = useTranslation();
@@ -52,7 +60,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ movies, onSelectMovie })
   const currentMovie = movies[currentIndex];
 
   return (
-    <section className="relative w-full h-[50vh] md:h-[60vh] text-left rtl:text-right">
+    <section className="relative w-full h-[60vh] md:h-[75vh] text-left rtl:text-right">
         {movies.map((movie, index) => (
             <div
                 key={movie.id}
@@ -68,23 +76,39 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ movies, onSelectMovie })
             </div>
         ))}
         
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0F172A]/30 via-transparent to-transparent rtl:bg-gradient-to-l" />
+
 
         <div className="relative h-full container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-12 sm:pb-16">
-            <div className="w-full md:w-1/2 lg:w-2/5">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white shadow-lg mb-4 animate-slide-up-fade" style={{animationDelay: '0.2s'}}>
-                    {currentMovie.title}
-                </h2>
+            <div className="w-full md:w-2/3 lg:w-1/2">
+                <div className="flex items-center gap-4 mb-4 animate-slide-up-fade" style={{animationDelay: '0.1s'}}>
+                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white shadow-lg">
+                        {currentMovie.title}
+                    </h2>
+                </div>
+                
+                <div className="flex items-center gap-4 mb-4 animate-slide-up-fade" style={{animationDelay: '0.2s'}}>
+                    <RatingCircle rating={currentMovie.vote_average} />
+                    <span className="text-slate-300 font-semibold">{currentMovie.release_date.split('-')[0]}</span>
+                </div>
 
                 <p className="hidden md:block text-slate-300 mb-6 line-clamp-3 animate-slide-up-fade" style={{animationDelay: '0.4s'}}>
                     {currentMovie.overview}
                 </p>
-                <div className="animate-slide-up-fade" style={{animationDelay: '0.6s'}}>
+                <div className="flex flex-wrap items-center gap-4 animate-slide-up-fade" style={{animationDelay: '0.6s'}}>
                     <button
                         onClick={() => onSelectMovie(currentMovie)}
                         className="px-6 py-3 bg-violet-600 text-white font-semibold rounded-lg shadow-md hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-opacity-75 transition-all duration-300 transform hover:scale-105"
                     >
                         {t('viewDetails')}
+                    </button>
+                    <button
+                        onClick={() => onSelectMovie(currentMovie, { playTrailer: true })}
+                        className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-lg shadow-md hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-opacity-75 transition-all duration-300 transform hover:scale-105"
+                    >
+                        <PlayIcon className="w-5 h-5"/>
+                        {t('playTrailer')}
                     </button>
                 </div>
             </div>

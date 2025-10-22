@@ -82,6 +82,8 @@ const translations = {
     liveBroadcasts: 'Live Broadcasts',
     menu: 'Menu',
     surpriseMe: 'Surprise Me',
+    action: 'Action',
+    adventure: 'Adventure',
   },
   ar: {
     appName: 'talvri',
@@ -162,6 +164,8 @@ const translations = {
     liveBroadcasts: 'بث مباشر',
     menu: 'القائمة',
     surpriseMe: 'فاجئني',
+    action: 'أكشن',
+    adventure: 'مغامرة',
   }
 };
 
