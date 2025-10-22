@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { ActiveTab } from '../App';
 import { useTranslation } from '../contexts/LanguageContext';
@@ -46,7 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
 
   return (
     <aside className="fixed top-0 left-0 h-full w-64 bg-[#191919] text-white p-6 hidden sm:flex flex-col space-y-8 z-50">
-      <h1 className="text-3xl font-bold tracking-wider text-white">watchog</h1>
+      <h1 className="text-3xl font-bold tracking-wider text-white">Talvri</h1>
       
       <div className="flex-grow">
           <nav className="space-y-2">

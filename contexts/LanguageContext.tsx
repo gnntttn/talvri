@@ -3,7 +3,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 // Define translations
 const translations = {
   en: {
-    appName: 'talvri',
+    appName: 'Talvri',
     searchPlaceholder: 'Search for movies & tv shows...',
     movies: 'Movies',
     tvShows: 'TV Shows',
@@ -99,7 +99,7 @@ const translations = {
     episodes: 'Episodes',
   },
   ar: {
-    appName: 'talvri',
+    appName: 'Talvri',
     searchPlaceholder: 'ابحث عن أفلام ومسلسلات...',
     movies: 'أفلام',
     tvShows: 'مسلسلات',
