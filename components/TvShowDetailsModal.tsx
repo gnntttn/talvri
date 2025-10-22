@@ -315,19 +315,9 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
     switch(activeTab) {
         case 'overview':
             return (
-                <div className="space-y-8">
-                    <div>
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">{t('overview')}</h3>
-                        <p className="text-slate-600 dark:text-slate-300 text-sm">{tvShow.overview}</p>
-                    </div>
-                     {similarTvShows.length > 0 && (
-                        <div>
-                            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">{t('youMightAlsoLike')}</h3>
-                            <div className="flex space-x-4 rtl:space-x-reverse overflow-x-auto pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">
-                                {similarTvShows.map(s => <MiniTvShowCard key={s.id} tvShow={s} onSelect={onSelectSimilarTvShow} />)}
-                            </div>
-                        </div>
-                    )}
+                <div>
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">{t('overview')}</h3>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm">{tvShow.overview}</p>
                 </div>
             );
         case 'cast':
@@ -407,11 +397,13 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-50 dark:from-slate-800 via-slate-50/50 dark:via-slate-800/50 to-transparent" />
                 
                 <div className="absolute bottom-0 left-0 rtl:right-0 w-full px-4 sm:px-6 pb-4">
-                  <div className="flex items-end gap-4">
-                    <div className="w-32 md:w-40 flex-shrink-0 -mb-8">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 text-center sm:text-left rtl:sm:text-right">
+                    <div className="w-36 sm:w-32 md:w-40 flex-shrink-0 -mb-20 sm:-mb-8 mx-auto sm:mx-0">
                        {posterUrl && <img src={posterUrl} alt={tvShow.name} className="w-full rounded-md shadow-2xl object-cover" />}
                     </div>
-                     <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white shadow-lg pb-2">{tvShow.name}</h2>
+                     <div className="pb-0 sm:pb-2 mt-4 sm:mt-0">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white shadow-lg">{tvShow.name}</h2>
+                     </div>
                   </div>
                 </div>
             </div>
@@ -425,9 +417,9 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
             )}
         </div>
 
-        <div className="px-4 sm:px-6 pt-12 pb-6">
+        <div className="px-4 sm:px-6 pt-24 sm:pt-12 pb-6">
             <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-2 w-full sm:w-auto">
                     <RatingCircle rating={tvShow.vote_average} />
                     <div className="text-sm text-slate-600 dark:text-slate-400 font-medium space-x-3 rtl:space-x-reverse">
                         <span>{firstAirYear}</span>
@@ -440,7 +432,7 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
                         ))}
                     </div>
                 </div>
-                 <div className="flex items-center gap-2 flex-shrink-0">
+                 <div className="flex items-center gap-2 flex-shrink-0 mx-auto sm:mx-0">
                     {trailer && (
                         <button onClick={() => setShowTrailer(true)} className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors text-sm font-semibold">
                             <PlayIcon className="w-5 h-5" />
@@ -469,6 +461,15 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
             <div className="pt-6">
                 {renderTabContent()}
             </div>
+            
+            {similarTvShows.length > 0 && (
+                <div className="pt-8 mt-6 border-t border-slate-200 dark:border-slate-700">
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">{t('youMightAlsoLike')}</h3>
+                    <div className="flex space-x-4 rtl:space-x-reverse overflow-x-auto pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">
+                        {similarTvShows.map(s => <MiniTvShowCard key={s.id} tvShow={s} onSelect={onSelectSimilarTvShow} />)}
+                    </div>
+                </div>
+            )}
         </div>
 
       </div>
