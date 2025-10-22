@@ -1,4 +1,5 @@
 
+
 export interface Movie {
   id: number;
   title: string;
@@ -55,6 +56,15 @@ export interface TmdbApiPopularResponse {
 export interface TmdbApiTvResponse {
   page: number;
   results: TVShow[];
+  total_pages: number;
+  total_results: number;
+}
+
+export type TrendingItem = (Movie & { media_type: 'movie' }) | (TVShow & { media_type: 'tv' });
+
+export interface TmdbApiTrendingResponse {
+  page: number;
+  results: TrendingItem[];
   total_pages: number;
   total_results: number;
 }

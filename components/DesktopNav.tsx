@@ -37,11 +37,11 @@ const NavItem: React.FC<{
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const { t } = useTranslation();
   
+  // Fix: Type '"live_broadcasts"' is not assignable to type 'ActiveTab'.
   const menuItems: { id: ActiveTab, label: string, icon: React.ReactNode }[] = [
     { id: 'movies', label: t('browse'), icon: <BrowseIcon /> },
     { id: 'trending', label: t('trending'), icon: <TrendingIcon /> },
     { id: 'tvshows', label: t('tvShows'), icon: <TvShowsIcon /> },
-    { id: 'live_broadcasts', label: t('liveBroadcasts'), icon: <LiveIcon /> },
   ];
 
   return (

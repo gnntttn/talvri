@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Movie } from '../types';
 import { MovieCard } from './MovieCard';
@@ -22,10 +21,10 @@ export const MovieSlider: React.FC<MovieSliderProps> = ({ title, movies, onSelec
   return (
     <section>
         <div className="flex justify-between items-center mb-4 text-left rtl:text-right">
-            <h2 className="text-2xl font-bold text-slate-100">{title}</h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{title}</h2>
             <button 
               onClick={onViewAll}
-              className="px-4 py-1.5 text-sm font-semibold rounded-full text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+              className="px-4 py-1.5 text-sm font-semibold rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
             >
               {t('viewAll')}
             </button>
@@ -47,22 +46,11 @@ export const MovieSlider: React.FC<MovieSliderProps> = ({ title, movies, onSelec
         </div>
         <style>{`
             .custom-scrollbar::-webkit-scrollbar {
-                height: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: #1e293b;
-                border-radius: 10px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: #334155;
+                display: none;
             }
             .custom-scrollbar {
                 -ms-overflow-style: none;
-                scrollbar-width: thin;
-                scrollbar-color: #1e293b transparent;
+                scrollbar-width: none;
             }
         `}</style>
     </section>

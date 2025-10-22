@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
 // Define translations
@@ -19,7 +20,7 @@ const translations = {
     topRatedTvShows: 'Top Rated TV Shows',
     airingToday: 'Airing Today',
     viewAll: 'View All',
-    noMoviesFound: 'No movies found for "{searchTerm}". Try adjusting your search or filters.',
+    noMoviesFound: 'No results found. Try adjusting your search or filters.',
     myFavorites: 'My Favorites',
     myWatchlist: 'My Watchlist',
     noFavorites: "You haven't added any favorites yet.",
@@ -77,6 +78,7 @@ const translations = {
     watchNow: 'Watch Now',
     browse: 'Browse',
     trending: 'Trending',
+    discover: 'Discover',
     liveBroadcasts: 'Live Broadcasts',
     menu: 'Menu',
     surpriseMe: 'Surprise Me',
@@ -98,7 +100,7 @@ const translations = {
     topRatedTvShows: 'الأعلى تقييماً',
     airingToday: 'يعرض اليوم',
     viewAll: 'عرض الكل',
-    noMoviesFound: 'لم يتم العثور على أفلام لـ "{searchTerm}". حاول تعديل بحثك أو الفلاتر.',
+    noMoviesFound: 'لا توجد نتائج. حاول تعديل بحثك أو الفلاتر.',
     myFavorites: 'أفلامي المفضلة',
     myWatchlist: 'قائمة المشاهدة الخاصة بي',
     noFavorites: 'لم تقم بإضافة أي أفلام مفضلة بعد.',
@@ -156,6 +158,7 @@ const translations = {
     watchNow: 'شاهد الآن',
     browse: 'تصفح',
     trending: 'شائع',
+    discover: 'اكتشف',
     liveBroadcasts: 'بث مباشر',
     menu: 'القائمة',
     surpriseMe: 'فاجئني',

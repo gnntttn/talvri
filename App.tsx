@@ -29,9 +29,11 @@ import { SearchBar } from './components/SearchBar';
 import { HeroSliderSkeleton } from './components/HeroSliderSkeleton';
 import { MovieSliderSkeleton } from './components/MovieSliderSkeleton';
 import { TvShowHeroSlider } from './components/TvShowHeroSlider';
+import { DiscoverPage } from './components/DiscoverPage';
+import { TrendingPage } from './components/TrendingPage';
 
 export type Theme = 'light' | 'dark';
-export type ActiveTab = 'movies' | 'tvshows' | 'search' | 'favorites' | 'watchlist' | 'trending' | 'live_broadcasts';
+export type ActiveTab = 'movies' | 'tvshows' | 'search' | 'favorites' | 'watchlist' | 'trending' | 'discover';
 type ActiveView = 
   | { type: 'main' }
   | { type: 'view_all_movies'; title: string; fetcher: (page: number, language: string) => Promise<TmdbApiPopularResponse> }
@@ -313,17 +315,33 @@ function App() {
     setIsSurpriseLoading(true);
     setError(null);
     try {
-      const initialData = await getPopularMovies(1, language);
+      const movieFetchers = [
+        getPopularMovies,
+        getTopRatedMovies,
+        getNowPlayingMovies,
+        getUpcomingMovies,
+      ];
+      const randomFetcher = movieFetchers[Math.floor(Math.random() * movieFetchers.length)];
+
+      // Fetch first page to get total pages
+      const initialData = await randomFetcher(1, language);
       const totalPages = Math.min(initialData.total_pages, 500);
+      
+      if (totalPages === 0) {
+        // If this category has no movies, we'll just throw and let the catch block handle it.
+        throw new Error('No movies found in the selected random category.');
+      }
+
       const randomPage = Math.floor(Math.random() * totalPages) + 1;
       
-      const data = await getPopularMovies(randomPage, language);
+      const data = await randomFetcher(randomPage, language);
       if (data.results.length > 0) {
         const randomIndex = Math.floor(Math.random() * data.results.length);
         const randomMovie = data.results[randomIndex];
         await handleSelectMovie(randomMovie, { playTrailer: true });
       } else {
-        setError(t('couldNotFetchRandom'));
+        // This is unlikely if totalPages > 0, but as a safeguard:
+        throw new Error('Randomly selected page had no movies.');
       }
     } catch (err) {
       setError(t('couldNotFetchRandom'));
@@ -332,6 +350,8 @@ function App() {
       setIsSurpriseLoading(false);
     }
   };
+
+  const onHeroPage = (activeTab === 'movies' || activeTab === 'tvshows') && activeView.type === 'main';
 
   // --- Content Rendering ---
   const renderMoviesPage = () => {
@@ -461,27 +481,52 @@ function App() {
     );
   };
 
+  const renderDiscoverPage = () => {
+    return (
+      <DiscoverPage
+        movieGenres={movieGenres}
+        tvGenres={tvGenres}
+        onSelectMovie={handleSelectMovie}
+        onSelectTvShow={handleSelectTvShow}
+        favoriteMovieIds={favoriteIds}
+        onToggleFavoriteMovie={toggleFavorite}
+        watchlistMovieIds={watchlistIds}
+        onToggleWatchlistMovie={toggleWatchlist}
+        favoriteTvShowIds={favoriteTvShowIds}
+        onToggleFavoriteTvShow={toggleFavoriteTvShow}
+        watchlistTvShowIds={watchlistTvShowIds}
+        onToggleWatchlistTvShow={toggleWatchlistTvShow}
+      />
+    );
+  };
+
+  const renderTrendingPage = () => {
+    return (
+      <TrendingPage
+        onSelectMovie={handleSelectMovie}
+        onSelectTvShow={handleSelectTvShow}
+        favoriteMovieIds={favoriteIds}
+        onToggleFavoriteMovie={toggleFavorite}
+        watchlistMovieIds={watchlistIds}
+        onToggleWatchlistMovie={toggleWatchlist}
+        favoriteTvShowIds={favoriteTvShowIds}
+        onToggleFavoriteTvShow={toggleFavoriteTvShow}
+        watchlistTvShowIds={watchlistTvShowIds}
+        onToggleWatchlistTvShow={toggleWatchlistTvShow}
+      />
+    );
+  };
+
+
   const renderContent = () => {
     switch (activeTab) {
       case 'movies': return renderMoviesPage();
       case 'tvshows': return renderTvShowsPage();
+      case 'discover': return renderDiscoverPage();
+      case 'trending': return renderTrendingPage();
       case 'search': return renderSearchPage();
       case 'favorites': return renderListPage('favorites');
       case 'watchlist': return renderListPage('watchlist');
-      case 'trending':
-        return (
-          <div className="text-center py-20 pt-28">
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Trending Coming Soon</h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">This section is under construction.</p>
-          </div>
-        );
-      case 'live_broadcasts':
-        return (
-          <div className="text-center py-20 pt-28">
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Live Broadcasts Coming Soon</h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">This section is under construction.</p>
-          </div>
-        );
       default: return renderMoviesPage();
     }
   };
@@ -495,6 +540,7 @@ function App() {
         setActiveTab={setActiveTab}
         onSurpriseMe={handleSurpriseMe}
         isSurpriseLoading={isSurpriseLoading}
+        onHeroPage={onHeroPage}
       />
       
       <main className="pb-24 sm:pb-8">

@@ -1,6 +1,7 @@
 
+
 import { TMDB_API_KEY, TMDB_BASE_URL } from '../constants';
-import type { Movie, TmdbApiPopularResponse, Genre, PersonDetails, PersonMovieCreditsResponse, TVShow, TmdbApiTvResponse, SeasonDetails } from '../types';
+import type { Movie, TmdbApiPopularResponse, Genre, PersonDetails, PersonMovieCreditsResponse, TVShow, TmdbApiTvResponse, SeasonDetails, TmdbApiTrendingResponse } from '../types';
 
 const fetchFromTmdb = async <T,>(endpoint: string, language: string = 'en-US'): Promise<T> => {
   const separator = endpoint.includes('?') ? '&' : '?';
@@ -53,6 +54,26 @@ export const discoverTvShows = async (genreId: number, page: number = 1, languag
     return fetchFromTmdb<TmdbApiTvResponse>(`discover/tv?sort_by=popularity.desc&page=${page}&with_genres=${genreId}`, language);
 };
 
+export const discoverMedia = async (
+  mediaType: 'movie' | 'tv',
+  filters: { genre?: number | null; year?: number | null; rating?: number | null },
+  page: number = 1,
+  language: string
+): Promise<TmdbApiPopularResponse | TmdbApiTvResponse> => {
+  let query = `discover/${mediaType}?sort_by=popularity.desc&include_adult=false&page=${page}`;
+  if (filters.genre) {
+    query += `&with_genres=${filters.genre}`;
+  }
+  if (filters.year) {
+    const yearParam = mediaType === 'movie' ? 'primary_release_year' : 'first_air_date_year';
+    query += `&${yearParam}=${filters.year}`;
+  }
+  if (filters.rating && filters.rating > 0) {
+    query += `&vote_average.gte=${filters.rating}`;
+  }
+  return fetchFromTmdb(query, language);
+};
+
 export const getSimilarMovies = async (movieId: number, page: number = 1, language: string): Promise<TmdbApiPopularResponse> => {
   return fetchFromTmdb<TmdbApiPopularResponse>(`movie/${movieId}/similar?page=${page}`, language);
 };
@@ -94,6 +115,6 @@ export const getTvShowSeasonDetails = async (tvId: number, seasonNumber: number,
     return fetchFromTmdb<SeasonDetails>(`tv/${tvId}/season/${seasonNumber}`, language);
 };
 
-export const getTrendingAllWeek = async (page: number = 1, language: string): Promise<TmdbApiPopularResponse> => {
-  return fetchFromTmdb<TmdbApiPopularResponse>(`trending/all/week?page=${page}`, language);
+export const getTrendingAllWeek = async (page: number = 1, language: string): Promise<TmdbApiTrendingResponse> => {
+  return fetchFromTmdb<TmdbApiTrendingResponse>(`trending/all/week?page=${page}`, language);
 };
