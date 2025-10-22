@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import type { Theme, ActiveTab } from '../App';
 import { useTranslation } from '../contexts/LanguageContext';
+import { Logo } from './Logo';
 
 // --- Icons ---
 const MoviesIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -27,7 +29,7 @@ const WatchlistIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 const FavoritesIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
-        <path fillRule="evenodd" d="m9.653 16.915-.005-.003-.019-.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582-1.9-22.045 22.045 0 0 1-2.582-1.9 20.759 20.759 0 0 1-1.162-.682c-.006-.003-.012-.007-.019-.01L1.965 12.13a2.25 2.25 0 0 1 0-3.182l4.47-4.47a2.25 2.25 0 0 1 3.182 0l.53.53.53-.53a2.25 2.25 0 0 1 3.182 0l4.47 4.47a2.25 2.25 0 0 1 0 3.182l-1.965 1.965c-.006.003-.012.007-.019.01a20.759 20.759 0 0 1-1.162.682 22.045 22.045 0 0 1-2.582 1.9-22.045 22.045 0 0 1-2.582 1.9 20.759 20.759 0 0 1-1.162.682zM10 11.915a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z" clipRule="evenodd" />
+        <path fillRule="evenodd" d="m9.653 16.915-.005-.003-.019-.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582-1.9-22.045 22.045 0 0 1-2.582-1.9 20.759 20.759 0 0 1-1.162-.682c-.006-.003-.012-.007-.019-.01L1.965 12.13a2.25 2.25 0 0 1 0-3.182l4.47-4.47a2.25 2.25 0 0 1 3.182 0l.53.53.53-.53a2.25 2.25 0 0 1 3.182 0l4.47 4.47a2.25 2.25 0 0 1 0 3.182l-1.965 1.965c-.006.003-.012.007-.019.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582 1.9-22.045 22.045 0 0 1-2.582 1.9 20.759 20.759 0 0 1-1.162.682zM10 11.915a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z" clipRule="evenodd" />
     </svg>
 );
 const RocketIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -177,9 +179,13 @@ export const Header: React.FC<HeaderProps> = ({ theme, setTheme, activeTab, setA
                 <button onClick={onMenuClick} className={`md:hidden ${menuButtonClasses}`} aria-label={t('menu')}>
                     <MenuIcon className="w-6 h-6" />
                 </button>
-                <h1 className={`text-3xl font-bold tracking-wider ${onHeroPage ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
-                    <span className="text-violet-400">t</span>alvri
-                </h1>
+                <button
+                  onClick={() => setActiveTab('movies')}
+                  className="focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 rounded-lg -m-2 p-2"
+                  aria-label={t('appName')}
+                >
+                  <Logo textClassName={onHeroPage ? 'text-white' : 'text-slate-900 dark:text-white'} />
+                </button>
             </div>
             <nav ref={navContainerRef} className={navContainerClasses}>
                 <div

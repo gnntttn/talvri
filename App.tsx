@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { Movie, Genre, TmdbApiPopularResponse, PersonDetails, TVShow, TmdbApiTvResponse } from './types';
 import { 
@@ -7,7 +6,8 @@ import {
   getPersonMovieCredits, getPopularTvShows,
   getTvShowDetails, searchTvShows,
   getTopRatedMovies, getUpcomingMovies, getTopRatedTvShows, getAiringTodayTvShows,
-  discoverMovies
+  discoverMovies,
+  discoverTvShows
 } from './services/tmdbService';
 import { Header } from './components/Header';
 import { Loader } from './components/Loader';
@@ -34,6 +34,8 @@ import { TvShowHeroSlider } from './components/TvShowHeroSlider';
 import { DiscoverPage } from './components/DiscoverPage';
 import { TrendingPage } from './components/TrendingPage';
 import { SideMenu } from './components/SideMenu';
+import { GenreSuggestionGrid } from './components/GenreSuggestionGrid';
+import { NoResultsDisplay } from './components/NoResultsDisplay';
 
 export type Theme = 'light' | 'dark';
 export type ActiveTab = 'movies' | 'tvshows' | 'search' | 'favorites' | 'watchlist' | 'trending' | 'discover';
@@ -47,9 +49,6 @@ function App() {
   
   // UI State
   const [theme, setTheme] = useState<Theme>(() => {
-    // This logic is duplicated from the inline script in index.html to avoid a race condition.
-    // By re-running the logic, we ensure React's initial state matches the user's preference
-    // without relying on the DOM being updated by the script first.
     if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       return 'dark';
     }
@@ -74,6 +73,8 @@ function App() {
   const [popularTvShows, setPopularTvShows] = useState<TVShow[]>([]);
   const [topRatedTvShows, setTopRatedTvShows] = useState<TVShow[]>([]);
   const [airingTodayTvShows, setAiringTodayTvShows] = useState<TVShow[]>([]);
+  const [actionAdventureTvShows, setActionAdventureTvShows] = useState<TVShow[]>([]);
+  const [sciFiFantasyTvShows, setSciFiFantasyTvShows] = useState<TVShow[]>([]);
   
   // Search Page State
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,6 +101,16 @@ function App() {
   const [activeListSubTab, setActiveListSubTab] = useState<'movies' | 'tvshows'>('movies');
   const [isListLoading, setIsListLoading] = useState(false);
   
+  const popularGenreSuggestions = useMemo(() => {
+    // Use genre IDs for language-independent filtering.
+    // These IDs correspond to: Action, Comedy, Science Fiction, Horror, Romance, Animation, Drama, Thriller
+    const popularGenreIds = new Set([28, 35, 878, 27, 10749, 16, 18, 53]);
+    const genreOrder = [28, 35, 878, 27, 10749, 16, 18, 53];
+
+    return movieGenres
+      .filter(g => popularGenreIds.has(g.id))
+      .sort((a, b) => genreOrder.indexOf(a.id) - genreOrder.indexOf(b.id)); // Maintain a consistent order
+  }, [movieGenres]);
 
   // --- Effects ---
 
@@ -128,7 +139,7 @@ function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const [pop, top, now, upc, movGenres, tvGen, popTv, topTv, airTv, actMov, advMov] = await Promise.all([
+      const [pop, top, now, upc, movGenres, tvGen, popTv, topTv, airTv, actMov, advMov, actAdvTv, sciFiTv] = await Promise.all([
         getPopularMovies(1, language),
         getTopRatedMovies(1, language),
         getNowPlayingMovies(1, language),
@@ -140,6 +151,8 @@ function App() {
         getAiringTodayTvShows(1, language),
         discoverMovies(28, 1, language), // Action
         discoverMovies(12, 1, language), // Adventure
+        discoverTvShows(10759, 1, language), // Action & Adventure
+        discoverTvShows(10765, 1, language), // Sci-Fi & Fantasy
       ]);
       setPopularMovies(pop.results);
       setTopRatedMovies(top.results);
@@ -152,6 +165,8 @@ function App() {
       setAiringTodayTvShows(airTv.results);
       setActionMovies(actMov.results);
       setAdventureMovies(advMov.results);
+      setActionAdventureTvShows(actAdvTv.results);
+      setSciFiFantasyTvShows(sciFiTv.results);
     } catch (err) {
       setError(t('failedToLoadMovies'));
       console.error(err);
@@ -339,7 +354,6 @@ function App() {
       const totalPages = Math.min(initialData.total_pages, 500);
       
       if (totalPages === 0) {
-        // If this category has no movies, we'll just throw and let the catch block handle it.
         throw new Error('No movies found in the selected random category.');
       }
 
@@ -351,7 +365,6 @@ function App() {
         const randomMovie = data.results[randomIndex];
         await handleSelectMovie(randomMovie, { playTrailer: true });
       } else {
-        // This is unlikely if totalPages > 0, but as a safeguard:
         throw new Error('Randomly selected page had no movies.');
       }
     } catch (err) {
@@ -431,7 +444,9 @@ function App() {
                 {isLoading ? <MovieSliderSkeleton /> : (
                     <>
                         <TvShowSlider title={t('popularTvShows')} tvShows={popularTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} onViewAll={() => handleViewAllTvShows(t('popularTvShows'), getPopularTvShows)} />
+                        <TvShowSlider title={t('actionAdventure')} tvShows={actionAdventureTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} onViewAll={() => handleViewAllTvShows(t('actionAdventure'), (page, lang) => discoverTvShows(10759, page, lang))} />
                         <TvShowSlider title={t('topRatedTvShows')} tvShows={topRatedTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} onViewAll={() => handleViewAllTvShows(t('topRatedTvShows'), getTopRatedTvShows)} />
+                        <TvShowSlider title={t('sciFiFantasy')} tvShows={sciFiFantasyTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} onViewAll={() => handleViewAllTvShows(t('sciFiFantasy'), (page, lang) => discoverTvShows(10765, page, lang))} />
                     </>
                 )}
             </div>
@@ -440,28 +455,58 @@ function App() {
   };
 
   const renderSearchPage = () => {
-    const noResults = !isSearching && searchQuery.trim().length > 1 && searchedMovies.length === 0 && searchedTvShows.length === 0;
+    const hasSearchQuery = searchQuery.trim().length > 1;
+    const hasResults = searchedMovies.length > 0 || searchedTvShows.length > 0;
+    const noResultsFound = hasSearchQuery && !isSearching && !hasResults;
+    const showInitialState = !searchQuery.trim() && !isSearching && !hasResults;
+
+    const handleGenreSuggestionClick = (genreName: string) => {
+        setSearchQuery(genreName);
+    };
+
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28">
-        <SearchBar searchTerm={searchQuery} setSearchTerm={setSearchQuery} />
-        {isSearching && <div className="mt-8"><Loader /></div>}
-        {noResults && <p className="text-center mt-8 text-slate-500 dark:text-slate-400">{t('noMoviesFound', { searchTerm: searchQuery })}</p>}
-        {!isSearching && (
-          <div className="mt-8 space-y-12">
-            {searchedMovies.length > 0 && (
-              <section>
-                <h2 className="text-2xl font-bold mb-4">{t('movies')}</h2>
-                <MovieGrid movies={searchedMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
-              </section>
+        <div className="max-w-3xl mx-auto">
+            <SearchBar searchTerm={searchQuery} setSearchTerm={setSearchQuery} />
+            
+            {showInitialState && (
+                <div className="text-center mt-12 animate-fade-in">
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{t('findYourNextFavorite')}</h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-8">{t('exploreThousandsOfTitles')}</p>
+                    <GenreSuggestionGrid genres={popularGenreSuggestions} onGenreClick={handleGenreSuggestionClick} />
+                </div>
             )}
-            {searchedTvShows.length > 0 && (
-              <section>
-                <h2 className="text-2xl font-bold mb-4">{t('tvShows')}</h2>
-                <TvShowGrid tvShows={searchedTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
-              </section>
+            
+            {isSearching && <div className="mt-8"><Loader /></div>}
+            
+            {noResultsFound && (
+                <NoResultsDisplay 
+                    query={searchQuery} 
+                    onDiscoverClick={() => setActiveTab('discover')} 
+                />
             )}
-          </div>
-        )}
+            
+            {hasResults && !isSearching && (
+              <div className="mt-8 space-y-12 animate-fade-in">
+                {searchedMovies.length > 0 && (
+                  <section>
+                    <h2 className="text-2xl font-bold mb-4">{t('movies')}</h2>
+                    <MovieGrid movies={searchedMovies} onSelectMovie={handleSelectMovie} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} watchlistIds={watchlistIds} onToggleWatchlist={toggleWatchlist} />
+                  </section>
+                )}
+                {searchedTvShows.length > 0 && (
+                  <section>
+                    <h2 className="text-2xl font-bold mb-4">{t('tvShows')}</h2>
+                    <TvShowGrid tvShows={searchedTvShows} onSelectTvShow={handleSelectTvShow} favoriteIds={favoriteTvShowIds} onToggleFavorite={toggleFavoriteTvShow} watchlistIds={watchlistTvShowIds} onToggleWatchlist={toggleWatchlistTvShow} />
+                  </section>
+                )}
+              </div>
+            )}
+        </div>
+        <style>{`
+            @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+            .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+        `}</style>
       </div>
     );
   };

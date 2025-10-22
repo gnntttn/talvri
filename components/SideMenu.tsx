@@ -1,6 +1,8 @@
+
 import React from 'react';
 import type { ActiveTab } from '../App';
 import { useTranslation } from '../contexts/LanguageContext';
+import { Logo } from './Logo';
 
 // --- Icons (copied from Header & BottomNavBar for consistency) ---
 const MoviesIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -26,7 +28,7 @@ const WatchlistIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 const FavoritesIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
-        <path fillRule="evenodd" d="m9.653 16.915-.005-.003-.019-.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582-1.9-22.045 22.045 0 0 1-2.582-1.9 20.759 20.759 0 0 1-1.162-.682c-.006-.003-.012-.007-.019-.01L1.965 12.13a2.25 2.25 0 0 1 0-3.182l4.47-4.47a2.25 2.25 0 0 1 3.182 0l.53.53.53-.53a2.25 2.25 0 0 1 3.182 0l4.47 4.47a2.25 2.25 0 0 1 0 3.182l-1.965 1.965c-.006.003-.012.007-.019.01a20.759 20.759 0 0 1-1.162.682 22.045 22.045 0 0 1-2.582 1.9-22.045 22.045 0 0 1-2.582 1.9 20.759 20.759 0 0 1-1.162.682zM10 11.915a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z" clipRule="evenodd" />
+        <path fillRule="evenodd" d="m9.653 16.915-.005-.003-.019-.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582-1.9-22.045 22.045 0 0 1-2.582-1.9 20.759 20.759 0 0 1-1.162-.682c-.006-.003-.012-.007-.019-.01L1.965 12.13a2.25 2.25 0 0 1 0-3.182l4.47-4.47a2.25 2.25 0 0 1 3.182 0l.53.53.53-.53a2.25 2.25 0 0 1 3.182 0l4.47 4.47a2.25 2.25 0 0 1 0 3.182l-1.965 1.965c-.006.003-.012.007-.019.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582 1.9-22.045 22.045 0 0 1-2.582 1.9 20.759 20.759 0 0 1-1.162.682zM10 11.915a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z" clipRule="evenodd" />
     </svg>
 );
 const CompassIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -90,9 +92,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, activeTab, 
   ];
   
   const panelPosition = dir === 'rtl'
-    ? (isOpen ? 'translate-x-0' : '-translate-x-full')
-    : (isOpen ? 'translate-x-0' : 'translate-x-full');
-  const panelClasses = dir === 'rtl' ? 'left-0' : 'right-0';
+    ? (isOpen ? 'translate-x-0' : 'translate-x-full')
+    : (isOpen ? 'translate-x-0' : '-translate-x-full');
+  const panelClasses = dir === 'rtl' ? 'right-0' : 'left-0';
 
   return (
     <div role="dialog" aria-modal="true" className={`fixed inset-0 z-50 ${!isOpen && 'pointer-events-none'}`}>
@@ -106,7 +108,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, activeTab, 
         className={`fixed top-0 bottom-0 ${panelClasses} w-72 bg-slate-100 dark:bg-[#0F172A] shadow-lg p-4 transition-transform duration-300 ease-in-out ${panelPosition}`}
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white">{t('menu')}</h2>
+          <Logo textClassName="text-slate-900 dark:text-white" textSize="text-2xl" />
           <button onClick={onClose} className="p-1 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700">
             <CloseIcon className="w-6 h-6" />
           </button>

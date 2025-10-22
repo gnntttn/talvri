@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
 // Define translations
@@ -74,7 +73,6 @@ const translations = {
     born: 'Born',
     died: 'Died',
     placeOfBirth: 'Place of Birth',
-    // Fix: Add missing translation keys.
     watchNow: 'Watch Now',
     browse: 'Browse',
     trending: 'Trending',
@@ -84,6 +82,15 @@ const translations = {
     surpriseMe: 'Surprise Me',
     action: 'Action',
     adventure: 'Adventure',
+    actionAdventure: 'Action & Adventure',
+    sciFiFantasy: 'Sci-Fi & Fantasy',
+    // Search page enhancements
+    findYourNextFavorite: 'Find Your Next Favorite',
+    exploreThousandsOfTitles: 'Explore thousands of movies and TV shows waiting for you.',
+    popularGenres: 'Popular Genres',
+    noResultsFoundFor: "No Results Found for '{query}'",
+    tryCheckingSpelling: 'Try checking your spelling or using different keywords.',
+    discoverSomethingNew: 'Discover Something New',
   },
   ar: {
     appName: 'talvri',
@@ -156,7 +163,6 @@ const translations = {
     born: 'الميلاد',
     died: 'الوفاة',
     placeOfBirth: 'مكان الميلاد',
-    // Fix: Add missing translation keys.
     watchNow: 'شاهد الآن',
     browse: 'تصفح',
     trending: 'شائع',
@@ -166,6 +172,15 @@ const translations = {
     surpriseMe: 'فاجئني',
     action: 'أكشن',
     adventure: 'مغامرة',
+    actionAdventure: 'أكشن ومغامرة',
+    sciFiFantasy: 'خيال علمي وفانتازيا',
+    // Search page enhancements
+    findYourNextFavorite: 'ابحث عن فيلمك المفضل التالي',
+    exploreThousandsOfTitles: 'استكشف آلاف الأفلام والمسلسلات المتاحة.',
+    popularGenres: 'الأنواع الشائعة',
+    noResultsFoundFor: "لم يتم العثور على نتائج لـ '{query}'",
+    tryCheckingSpelling: 'حاول التحقق من الإملاء أو استخدام كلمات رئيسية مختلفة.',
+    discoverSomethingNew: 'اكتشف شيئًا جديدًا',
   }
 };
 
