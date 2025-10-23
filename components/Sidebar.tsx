@@ -23,14 +23,16 @@ const NavItem: React.FC<{
   isActive: boolean;
   onClick: () => void;
 }> = ({ label, icon, isActive, onClick }) => {
-  const activeClasses = "text-indigo-600 dark:text-indigo-400 bg-slate-200/60 dark:bg-indigo-500/10";
-  const inactiveClasses = "text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800";
+  const baseClasses = 'flex items-center gap-4 w-full px-4 py-3 rounded-lg text-md font-semibold transition-colors duration-200 text-left rtl:text-right';
+  const activeClasses = 'bg-indigo-600 text-white';
+  const inactiveClasses = 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800';
+
   return (
     <button
       onClick={onClick}
-      className={`group flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${isActive ? activeClasses : inactiveClasses}`}
+      className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
     >
-      <span className="w-5 h-5">{icon}</span>
+      <span className="w-6 h-6 flex-shrink-0">{icon}</span>
       <span>{label}</span>
     </button>
   );
@@ -75,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
               </div>
             </div>
             <div>
-              <h3 className="px-3 my-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">My Library</h3>
+              <h3 className="px-3 my-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('myLibrary')}</h3>
               <div className="space-y-1">
                 {libraryItems.map(item => (
                     <NavItem
