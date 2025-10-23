@@ -4,6 +4,7 @@ import { TMDB_IMAGE_BASE_URL } from '../constants';
 import { getSimilarMovies } from '../services/tmdbService';
 import { useTranslation } from '../contexts/LanguageContext';
 import { RatingCircle } from './RatingCircle';
+import { AskGemini } from './AskGemini';
 
 type ActiveTab = 'overview' | 'cast' | 'watch' | 'reviews';
 
@@ -311,6 +312,8 @@ export const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({ movie, onC
 
                 <div className="pt-6">{renderTabContent()}</div>
                 
+                <AskGemini media={movie} />
+
                 {movie.collection && (<div className="pt-8 mt-6 border-t border-slate-200 dark:border-slate-700"><h3 className="text-xl font-bold mb-4">{t('partOfCollection', { name: movie.collection.name })}</h3><div className="flex space-x-4 rtl:space-x-reverse overflow-x-auto pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">{movie.collection.parts.map(m => <MiniMovieCard key={m.id} movie={m} onSelect={onSelectSimilarMovie} />)}</div></div>)}
                 {similarMovies.length > 0 && (<div className="pt-8 mt-6 border-t border-slate-200 dark:border-slate-700"><h3 className="text-xl font-bold mb-4">{t('youMightAlsoLike')}</h3><div className="flex space-x-4 rtl:space-x-reverse overflow-x-auto pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">{similarMovies.map(m => <MiniMovieCard key={m.id} movie={m} onSelect={onSelectSimilarMovie} />)}</div></div>)}
             </div>

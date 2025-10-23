@@ -5,6 +5,7 @@ import { getSimilarTvShows, getTvShowSeasonDetails } from '../services/tmdbServi
 import { useTranslation } from '../contexts/LanguageContext';
 import { Loader } from './Loader';
 import { RatingCircle } from './RatingCircle';
+import { AskGemini } from './AskGemini';
 
 type ActiveTab = 'overview' | 'cast' | 'seasons' | 'watch' | 'reviews';
 
@@ -394,6 +395,8 @@ export const TvShowDetailsModal: React.FC<TvShowDetailsModalProps> = ({ tvShow, 
                 </div>
 
                 <div className="pt-6">{renderTabContent()}</div>
+
+                <AskGemini media={tvShow} />
                 
                 {similarTvShows.length > 0 && (
                     <div className="pt-8 mt-6 border-t border-slate-200 dark:border-slate-700">
