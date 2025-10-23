@@ -37,16 +37,16 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
 
   return (
     <>
-    <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-lg mb-8 border border-slate-200 dark:border-slate-700 text-left rtl:text-right animate-filters-in">
+    <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-lg mb-8 border border-slate-200 dark:border-gray-700 text-left rtl:text-right animate-filters-in">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
         {/* Genre Filter */}
         <div>
-          <label htmlFor="genre-filter" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('genre')}</label>
+          <label htmlFor="genre-filter" className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">{t('genre')}</label>
           <select
             id="genre-filter"
             value={filters.genre || ''}
             onChange={(e) => onFilterChange.setGenre(e.target.value ? Number(e.target.value) : null)}
-            className="block w-full rounded-md border-0 bg-white dark:bg-slate-700 py-1.5 pl-3 pr-10 rtl:pr-3 rtl:pl-10 text-slate-900 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm transition-all duration-200 ease-in-out hover:shadow-md focus:shadow-lg hover:-translate-y-0.5"
+            className="block w-full rounded-md border-0 bg-white dark:bg-gray-700 py-1.5 pl-3 pr-10 rtl:pr-3 rtl:pl-10 text-slate-800 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm transition-all duration-200 ease-in-out"
             aria-label={t('genre')}
           >
             <option value="">{t('allGenres')}</option>
@@ -58,12 +58,12 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
         
         {/* Year Filter */}
         <div>
-          <label htmlFor="year-filter" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('releaseYear')}</label>
+          <label htmlFor="year-filter" className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">{t('releaseYear')}</label>
           <select
             id="year-filter"
             value={filters.year || ''}
             onChange={(e) => onFilterChange.setYear(e.target.value ? Number(e.target.value) : null)}
-            className="block w-full rounded-md border-0 bg-white dark:bg-slate-700 py-1.5 pl-3 pr-10 rtl:pr-3 rtl:pl-10 text-slate-900 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm transition-all duration-200 ease-in-out hover:shadow-md focus:shadow-lg hover:-translate-y-0.5"
+            className="block w-full rounded-md border-0 bg-white dark:bg-gray-700 py-1.5 pl-3 pr-10 rtl:pr-3 rtl:pl-10 text-slate-800 dark:text-slate-200 ring-1 ring-inset ring-slate-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm transition-all duration-200 ease-in-out"
              aria-label={t('releaseYear')}
           >
             <option value="">{t('anyYear')}</option>
@@ -75,7 +75,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
 
         {/* Rating Filter */}
         <div>
-          <label htmlFor="rating-filter" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label htmlFor="rating-filter" className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
             {filters.rating ? t('minRating', { rating: filters.rating.toFixed(1) }) : t('anyRating')}
           </label>
           <input
@@ -86,7 +86,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
             step="0.5"
             value={filters.rating || 0}
             onChange={(e) => onFilterChange.setRating(Number(e.target.value) > 0 ? Number(e.target.value) : null)}
-            className="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer"
+            className="w-full h-2 bg-slate-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer"
             aria-label={t('minRating', { rating: '' })}
           />
         </div>
@@ -95,7 +95,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
         <div>
           <button
             onClick={onResetFilters}
-            className="w-full px-4 py-2 bg-slate-500 text-white font-semibold rounded-lg shadow-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-opacity-75 transition-all duration-200 sm:text-sm hover:-translate-y-0.5 active:translate-y-0"
+            className="w-full px-4 py-2 bg-slate-500 text-white font-semibold rounded-lg shadow-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-opacity-75 transition-all duration-200 sm:text-sm"
           >
             {t('resetFilters')}
           </button>

@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import type { Movie } from '../types';
 import { MovieCard } from './MovieCard';

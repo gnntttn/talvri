@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTranslation } from '../contexts/LanguageContext';
 
@@ -12,12 +11,12 @@ const SubTabItem: React.FC<{
   isActive: boolean;
   onClick: () => void;
 }> = ({ label, isActive, onClick }) => {
-  const activeClasses = "bg-violet-600 text-white";
+  const activeClasses = "bg-indigo-600 text-white";
   const inactiveClasses = "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700";
   return (
     <button
       onClick={onClick}
-      className={`px-6 py-2 text-sm font-semibold rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${isActive ? activeClasses : inactiveClasses}`}
+      className={`px-6 py-2 text-sm font-semibold rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${isActive ? activeClasses : inactiveClasses}`}
     >
       {label}
     </button>

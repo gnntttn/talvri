@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback } from 'react';
 import { useTranslation } from '../contexts/LanguageContext';
 
@@ -35,7 +34,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, setSearchTerm,
   return (
     <div className="relative">
       <div className="pointer-events-none absolute inset-y-0 left-0 rtl:right-0 rtl:left-auto flex items-center pl-4 rtl:pr-4 rtl:pl-0">
-        <SearchIcon className="h-5 w-5 text-slate-400" />
+        <SearchIcon className="h-5 w-5 text-gray-400" />
       </div>
       <input
         ref={inputRef}
@@ -44,10 +43,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, setSearchTerm,
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         onFocus={onFocus}
-        className="block w-full rounded-full border-0 bg-slate-100 dark:bg-slate-800 py-2.5 pl-11 pr-12 rtl:pr-11 rtl:pl-12 text-slate-900 dark:text-slate-200 ring-1 ring-inset ring-transparent placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-violet-500 sm:text-sm sm:leading-6 transition"
+        className="block w-full rounded-full border-0 bg-slate-100 dark:bg-slate-700/50 py-2.5 pl-11 pr-12 rtl:pr-11 rtl:pl-12 text-slate-900 dark:text-white ring-1 ring-inset ring-transparent placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition"
       />
       <div className="pointer-events-none absolute inset-y-0 right-0 rtl:left-0 rtl:right-auto flex items-center pr-3 rtl:pl-3 rtl:pr-0">
-          <kbd className="hidden sm:inline-flex items-center rounded border border-slate-300 dark:border-slate-600 px-2 font-sans text-xs text-slate-400">
+          <kbd className="hidden sm:inline-flex items-center rounded border border-slate-300 dark:border-slate-600 px-2 font-sans text-xs text-slate-500 dark:text-slate-400">
             Ctrl+Q
           </kbd>
       </div>

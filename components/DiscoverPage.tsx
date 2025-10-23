@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Movie, TVShow, Genre } from '../types';
 import { discoverMedia } from '../services/tmdbService';
@@ -31,8 +29,8 @@ const MediaToggle: React.FC<{
     setMediaType: (type: 'movie' | 'tv') => void;
 }> = ({ mediaType, setMediaType }) => {
     const { t } = useTranslation();
-    const baseClasses = "px-6 py-2 text-sm font-semibold rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900";
-    const activeClasses = "bg-violet-600 text-white";
+    const baseClasses = "px-6 py-2 text-sm font-semibold rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900";
+    const activeClasses = "bg-indigo-600 text-white";
     const inactiveClasses = "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700";
 
     return (
@@ -136,8 +134,8 @@ export const DiscoverPage: React.FC<DiscoverPageProps> = (props) => {
     }
 
     return (
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28 animate-fade-in">
-            <h2 className="text-3xl font-bold text-center mb-4">{t('discover')}</h2>
+        <div className="animate-fade-in">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-4">{t('discover')}</h2>
             <MediaToggle mediaType={mediaType} setMediaType={setMediaType} />
             <SearchFilters
                 genres={mediaType === 'movie' ? props.movieGenres : props.tvGenres}

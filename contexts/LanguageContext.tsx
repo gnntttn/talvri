@@ -4,9 +4,10 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 const translations = {
   en: {
     appName: 'Talvri',
-    searchPlaceholder: 'Search for movies & tv shows...',
+    searchPlaceholder: 'Search movies, shows, people...',
     movies: 'Movies',
     tvShows: 'TV Shows',
+    people: 'People',
     home: 'Home',
     search: 'Search',
     watchlist: 'Watchlist',
@@ -18,6 +19,7 @@ const translations = {
     popularTvShows: 'Popular TV Shows',
     topRatedTvShows: 'Top Rated TV Shows',
     airingToday: 'Airing Today',
+    popularPeople: 'Popular People',
     viewAll: 'View All',
     noMoviesFound: 'No results found. Try adjusting your search or filters.',
     myFavorites: 'My Favorites',
@@ -51,7 +53,6 @@ const translations = {
     showLess: 'Show Less',
     seasonsAndEpisodes: 'Seasons & Episodes',
     season: 'Season',
-    // Fix: Add 'seasons' translation key to resolve type error.
     seasons: 'Seasons',
     episode: 'Episode',
     tmdbAttribution: '',
@@ -97,12 +98,16 @@ const translations = {
     overview: 'Overview',
     tagline: 'Tagline',
     episodes: 'Episodes',
+    movieCredits: 'Movie Credits',
+    tvCredits: 'TV Credits',
+    partOfCollection: 'Part of the {name} Collection',
   },
   ar: {
     appName: 'Talvri',
-    searchPlaceholder: 'ابحث عن أفلام ومسلسلات...',
+    searchPlaceholder: 'ابحث عن أفلام، مسلسلات، أشخاص...',
     movies: 'أفلام',
     tvShows: 'مسلسلات',
+    people: 'أشخاص',
     home: 'الرئيسية',
     search: 'بحث',
     watchlist: 'قائمة المشاهدة',
@@ -114,6 +119,7 @@ const translations = {
     popularTvShows: 'مسلسلات شائعة',
     topRatedTvShows: 'الأعلى تقييماً',
     airingToday: 'يعرض اليوم',
+    popularPeople: 'أشخاص مشهورون',
     viewAll: 'عرض الكل',
     noMoviesFound: 'لا توجد نتائج. حاول تعديل بحثك أو الفلاتر.',
     myFavorites: 'أفلامي المفضلة',
@@ -147,7 +153,6 @@ const translations = {
     showLess: 'عرض أقل',
     seasonsAndEpisodes: 'المواسم والحلقات',
     season: 'الموسم',
-    // Fix: Add 'seasons' translation key to resolve type error.
     seasons: 'مواسم',
     episode: 'حلقة',
     tmdbAttribution: '',
@@ -193,6 +198,9 @@ const translations = {
     overview: 'نظرة عامة',
     tagline: 'شعار',
     episodes: 'حلقات',
+    movieCredits: 'أعمال سينمائية',
+    tvCredits: 'أعمال تلفزيونية',
+    partOfCollection: 'جزء من مجموعة {name}',
   }
 };
 

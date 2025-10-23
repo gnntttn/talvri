@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Movie } from '../types';
 import { TMDB_IMAGE_BASE_URL } from '../constants';
@@ -53,14 +52,14 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ movies, onSelectMovie })
 
   if (!movies || movies.length === 0) {
     return (
-        <div className="relative w-full h-[50vh] md:h-[60vh] bg-slate-800 animate-pulse"></div>
+        <div className="relative w-full h-[50vh] md:h-[60vh] bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
     )
   }
 
   const currentMovie = movies[currentIndex];
 
   return (
-    <section className="relative w-full h-[60vh] md:h-[75vh] text-left rtl:text-right">
+    <section className="relative w-full aspect-[16/9] sm:aspect-[16/7] rounded-lg overflow-hidden shadow-lg group text-left rtl:text-right">
         {movies.map((movie, index) => (
             <div
                 key={movie.id}
@@ -76,46 +75,39 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ movies, onSelectMovie })
             </div>
         ))}
         
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0F172A]/30 via-transparent to-transparent rtl:bg-gradient-to-l" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent rtl:bg-gradient-to-l" />
 
 
-        <div className="relative h-full container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-12 sm:pb-16">
-            <div className="w-full md:w-2/3 lg:w-1/2">
-                <div className="flex items-center gap-4 mb-4 animate-slide-up-fade" style={{animationDelay: '0.1s'}}>
-                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white shadow-lg">
-                        {currentMovie.title}
-                    </h2>
-                </div>
-                
-                <div className="flex items-center gap-4 mb-4 animate-slide-up-fade" style={{animationDelay: '0.2s'}}>
-                    <RatingCircle rating={currentMovie.vote_average} />
-                    <span className="text-slate-300 font-semibold">{currentMovie.release_date.split('-')[0]}</span>
-                </div>
-
-                <p className="hidden md:block text-slate-300 mb-6 line-clamp-3 animate-slide-up-fade" style={{animationDelay: '0.4s'}}>
-                    {currentMovie.overview}
-                </p>
-                <div className="flex flex-wrap items-center gap-4 animate-slide-up-fade" style={{animationDelay: '0.6s'}}>
-                    <button
-                        onClick={() => onSelectMovie(currentMovie)}
-                        className="px-6 py-3 bg-violet-600 text-white font-semibold rounded-lg shadow-md hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-opacity-75 transition-all duration-300 transform hover:scale-105"
-                    >
-                        {t('viewDetails')}
-                    </button>
-                    <button
-                        onClick={() => onSelectMovie(currentMovie, { playTrailer: true })}
-                        className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-lg shadow-md hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-opacity-75 transition-all duration-300 transform hover:scale-105"
-                    >
-                        <PlayIcon className="w-5 h-5"/>
-                        {t('playTrailer')}
-                    </button>
-                </div>
+        <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-8 md:p-12 w-full sm:w-3/4 md:w-1/2">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white shadow-lg mb-2 sm:mb-4">
+                {currentMovie.title}
+            </h2>
+            <div className="flex items-center gap-4 mb-4 sm:mb-6">
+                <RatingCircle rating={currentMovie.vote_average} />
+                <span className="text-slate-300 font-semibold">{currentMovie.release_date.split('-')[0]}</span>
+            </div>
+            <p className="hidden md:block text-slate-200 text-sm md:text-base mb-4 sm:mb-6 line-clamp-3">
+                {currentMovie.overview}
+            </p>
+            <div className="flex flex-wrap items-center gap-4">
+                <button
+                    onClick={() => onSelectMovie(currentMovie)}
+                    className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 transition-transform duration-200 hover:scale-105"
+                >
+                    {t('viewDetails')}
+                </button>
+                 <button
+                    onClick={() => onSelectMovie(currentMovie, { playTrailer: true })}
+                    className="flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-lg shadow-md hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-opacity-75 transition-transform duration-200 hover:scale-105"
+                >
+                    <PlayIcon className="w-5 h-5"/>
+                    {t('playTrailer')}
+                </button>
             </div>
         </div>
 
 
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 rtl:space-x-reverse z-10">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 rtl:space-x-reverse z-10">
             {movies.slice(0, 10).map((_, slideIndex) => (
                  <button
                     key={slideIndex}
@@ -131,19 +123,6 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ movies, onSelectMovie })
                 display: -webkit-box;
                 -webkit-box-orient: vertical;
                 -webkit-line-clamp: 3;
-            }
-            @keyframes slide-up-fade {
-                from {
-                    opacity: 0;
-                    transform: translateY(1rem);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            .animate-slide-up-fade {
-                animation: slide-up-fade 0.5s ease-out both;
             }
         `}</style>
     </section>

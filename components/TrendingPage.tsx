@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { TrendingItem, Movie, TVShow } from '../types';
 import { getTrendingAllWeek } from '../services/tmdbService';
@@ -84,8 +85,8 @@ export const TrendingPage: React.FC<TrendingPageProps> = (props) => {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28 animate-fade-in">
-        <h2 className="text-3xl font-bold text-center mb-8">{t('trending')}</h2>
+    <div className="animate-fade-in">
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">{t('trending')}</h2>
         
         {renderContent()}
         

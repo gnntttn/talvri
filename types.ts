@@ -1,4 +1,11 @@
-
+export interface Collection {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  parts: Movie[];
+}
 
 export interface Movie {
   id: number;
@@ -18,8 +25,14 @@ export interface Movie {
   credits?: CreditsResponse;
   reviews?: MovieReviewsResponse;
   popularity: number;
-  // Fix: Add playOnMount to allow tracking if a trailer should play on mount.
   playOnMount?: boolean;
+  belongs_to_collection?: {
+    id: number;
+    name: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
+  } | null;
+  collection?: Collection;
 }
 
 export interface TVShow {
@@ -62,6 +75,15 @@ export interface TmdbApiTvResponse {
   results: TVShow[];
   total_pages: number;
   total_results: number;
+}
+
+export interface Person {
+  id: number;
+  name: string;
+  profile_path: string | null;
+  known_for_department: string;
+  popularity: number;
+  media_type?: 'person';
 }
 
 export type TrendingItem = (Movie & { media_type: 'movie' }) | (TVShow & { media_type: 'tv' });
@@ -123,6 +145,13 @@ export interface CreditsResponse {
   crew: Crew[];
 }
 
+export interface TmdbApiPeopleResponse {
+    page: number;
+    results: Person[];
+    total_pages: number;
+    total_results: number;
+}
+
 export interface PersonDetails {
   id: number;
   name: string;
@@ -138,6 +167,12 @@ export interface PersonMovieCreditsResponse {
   cast: Movie[];
   crew: Movie[];
 }
+
+export interface PersonTvCreditsResponse {
+  cast: TVShow[];
+  crew: TVShow[];
+}
+
 
 export interface AuthorDetails {
   name: string;

@@ -18,8 +18,8 @@ export const Logo: React.FC<LogoProps> = ({
       <svg className={iconClassName} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <defs>
             <linearGradient id="logoGradient" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#8B5CF6"/>
-                <stop offset="1" stopColor="#6366F1"/>
+                <stop stopColor="#4f46e5"/>
+                <stop offset="1" stopColor="#818cf8"/>
             </linearGradient>
         </defs>
         <path

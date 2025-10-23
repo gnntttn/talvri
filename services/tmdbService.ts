@@ -1,7 +1,13 @@
-
-
 import { TMDB_API_KEY, TMDB_BASE_URL } from '../constants';
-import type { Movie, TmdbApiPopularResponse, Genre, PersonDetails, PersonMovieCreditsResponse, TVShow, TmdbApiTvResponse, SeasonDetails, TmdbApiTrendingResponse } from '../types';
+import type { Movie, TmdbApiPopularResponse, Genre, PersonDetails, PersonMovieCreditsResponse, TVShow, TmdbApiTvResponse, SeasonDetails, TmdbApiTrendingResponse, TmdbApiPeopleResponse, PersonTvCreditsResponse, Collection, TrendingItem, Person } from '../types';
+
+interface TmdbApiMultiSearchResponse {
+    page: number;
+    results: (TrendingItem | (Person & { media_type: 'person' }))[];
+    total_pages: number;
+    total_results: number;
+}
+
 
 const fetchFromTmdb = async <T,>(endpoint: string, language: string = 'en-US'): Promise<T> => {
   const separator = endpoint.includes('?') ? '&' : '?';
@@ -14,7 +20,7 @@ const fetchFromTmdb = async <T,>(endpoint: string, language: string = 'en-US'): 
       if (errorData && errorData.status_message) {
         switch (response.status) {
           case 401:
-            errorMessage = `Authentication failed: ${errorData.status_message}. Please check if your TMDB API key is valid.`;
+            errorMessage = `Authentication failed: ${errorData.status_message}. Please check if your TMDB API key is valid and has been configured correctly.`;
             break;
           case 404:
             errorMessage = `The requested resource was not found: ${errorData.status_message}`;
@@ -50,6 +56,10 @@ export const getUpcomingMovies = async (page: number = 1, language: string): Pro
 export const searchMovies = async (query: string, page: number = 1, language: string): Promise<TmdbApiPopularResponse> => {
   return fetchFromTmdb<TmdbApiPopularResponse>(`search/movie?query=${encodeURIComponent(query)}&page=${page}&include_adult=false`, language);
 };
+
+export const searchMulti = async (query: string, page: number = 1, language: string): Promise<TmdbApiMultiSearchResponse> => {
+  return fetchFromTmdb<TmdbApiMultiSearchResponse>(`search/multi?query=${encodeURIComponent(query)}&page=${page}&include_adult=false`, language);
+}
 
 export const getMovieDetails = async (movieId: number, language: string): Promise<Movie> => {
     const appendToResponse = 'videos,watch/providers,credits,reviews';
@@ -104,6 +114,18 @@ export const getPersonMovieCredits = async (personId: number, language: string):
     return fetchFromTmdb<PersonMovieCreditsResponse>(`person/${personId}/movie_credits`, language);
 };
 
+export const getPersonTvCredits = async (personId: number, language: string): Promise<PersonTvCreditsResponse> => {
+    return fetchFromTmdb<PersonTvCreditsResponse>(`person/${personId}/tv_credits`, language);
+};
+
+export const getPopularPeople = async (page: number = 1, language: string): Promise<TmdbApiPeopleResponse> => {
+  return fetchFromTmdb<TmdbApiPeopleResponse>(`person/popular?page=${page}`, language);
+};
+
+export const searchPeople = async (query: string, page: number = 1, language: string): Promise<TmdbApiPeopleResponse> => {
+  return fetchFromTmdb<TmdbApiPeopleResponse>(`search/person?query=${encodeURIComponent(query)}&page=${page}&include_adult=false`, language);
+};
+
 export const getPopularTvShows = async (page: number = 1, language: string): Promise<TmdbApiTvResponse> => {
   return fetchFromTmdb<TmdbApiTvResponse>(`tv/popular?page=${page}`, language);
 };
@@ -135,4 +157,8 @@ export const getTvShowSeasonDetails = async (tvId: number, seasonNumber: number,
 
 export const getTrendingAllWeek = async (page: number = 1, language: string): Promise<TmdbApiTrendingResponse> => {
   return fetchFromTmdb<TmdbApiTrendingResponse>(`trending/all/week?page=${page}`, language);
+};
+
+export const getCollectionDetails = async (collectionId: number, language: string): Promise<Collection> => {
+  return fetchFromTmdb<Collection>(`collection/${collectionId}`, language);
 };

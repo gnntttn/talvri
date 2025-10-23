@@ -1,64 +1,31 @@
 
+
 import React from 'react';
 
 interface RatingCircleProps {
   rating: number;
-  size?: 'normal' | 'small';
 }
 
-export const RatingCircle: React.FC<RatingCircleProps> = ({ rating, size = 'normal' }) => {
-  const normalizedRating = rating * 10;
-  
-  const isSmall = size === 'small';
-  const radius = isSmall ? 16 : 20;
-  const strokeWidth = isSmall ? 3 : 4;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (normalizedRating / 100) * circumference;
-
-  let strokeColorClass;
-  if (normalizedRating >= 70) {
-    strokeColorClass = 'stroke-green-400';
-  } else if (normalizedRating >= 40) {
-    strokeColorClass = 'stroke-yellow-400';
-  } else {
-    strokeColorClass = 'stroke-red-400';
+export const RatingCircle: React.FC<RatingCircleProps> = ({ rating }) => {
+  if (!rating || rating <= 0) {
+    return (
+        <div className="flex-shrink-0 w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center" title="No rating available">
+            <span className="text-slate-600 dark:text-slate-200 font-bold text-xs">NR</span>
+        </div>
+    );
   }
 
-  const textSizeClass = isSmall ? 'text-xs' : 'text-sm';
-  const circleSize = isSmall ? 40 : 50;
+  const getRatingColor = () => {
+    if (rating >= 7.5) return 'text-green-500';
+    if (rating >= 5) return 'text-yellow-500';
+    return 'text-red-500';
+  };
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: circleSize, height: circleSize }}>
-      <svg className="absolute w-full h-full">
-        <circle
-          className="stroke-slate-700"
-          strokeWidth={strokeWidth}
-          fill="transparent"
-          r={radius}
-          cx={circleSize / 2}
-          cy={circleSize / 2}
-        />
-        <circle
-          className={`${strokeColorClass} transition-all duration-1000 ease-out`}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          fill="transparent"
-          r={radius}
-          cx={circleSize / 2}
-          cy={circleSize / 2}
-          style={{
-            strokeDasharray: circumference,
-            strokeDashoffset,
-            transform: 'rotate(-90deg)',
-            transformOrigin: '50% 50%',
-          }}
-        />
-      </svg>
-      <div className="absolute flex items-center justify-center w-full h-full bg-slate-800 rounded-full">
-        <span className={`text-white font-bold ${textSizeClass}`}>
-          {rating.toFixed(1)}
-        </span>
-      </div>
+    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+      <span className={`font-bold text-lg ${getRatingColor()}`}>
+        {rating.toFixed(1)}
+      </span>
     </div>
   );
 };
