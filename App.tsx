@@ -62,7 +62,7 @@ function App() {
     }
     return 'light';
   });
-  const [activeTab, setActiveTab] = useState<ActiveTab>('discover');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('movies');
   const [activeView, setActiveView] = useState<ActiveView>({ type: 'main' });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

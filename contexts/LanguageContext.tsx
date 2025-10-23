@@ -105,6 +105,10 @@ const translations = {
     tvCredits: 'TV Credits',
     partOfCollection: 'Part of the {name} Collection',
     genreMoviesTitle: '{genreName} Movies',
+    mute: 'Mute',
+    unmute: 'Unmute',
+    play: 'Play',
+    pause: 'Pause',
   },
   ar: {
     appName: 'Talvri',
@@ -209,6 +213,10 @@ const translations = {
     tvCredits: 'أعمال تلفزيونية',
     partOfCollection: 'جزء من مجموعة {name}',
     genreMoviesTitle: 'أفلام {genreName}',
+    mute: 'كتم الصوت',
+    unmute: 'إلغاء كتم الصوت',
+    play: 'تشغيل',
+    pause: 'إيقاف مؤقت',
   }
 };
 
