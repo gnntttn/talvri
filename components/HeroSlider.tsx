@@ -75,30 +75,30 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ movies, onSelectMovie })
             </div>
         ))}
         
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent rtl:bg-gradient-to-l" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent rtl:bg-gradient-to-l" />
+        <div className="absolute inset-0 shadow-inner-strong" />
 
-
-        <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-8 md:p-12 w-full sm:w-3/4 md:w-1/2">
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white shadow-lg mb-2 sm:mb-4">
+        <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-8 md:p-12 w-full sm:w-3/4 md:w-2/3 lg:w-1/2">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.7)'}}>
                 {currentMovie.title}
             </h2>
-            <div className="flex items-center gap-4 mb-4 sm:mb-6">
+             <div className="flex items-center gap-4 my-3 sm:my-4">
                 <RatingCircle rating={currentMovie.vote_average} />
-                <span className="text-slate-300 font-semibold">{currentMovie.release_date.split('-')[0]}</span>
+                {currentMovie.release_date && <span className="text-slate-200 font-semibold text-shadow-sm">{currentMovie.release_date.split('-')[0]}</span>}
             </div>
-            <p className="hidden md:block text-slate-200 text-sm md:text-base mb-4 sm:mb-6 line-clamp-3">
+            <p className="hidden md:block text-slate-200 text-sm md:text-base mb-4 sm:mb-6 line-clamp-3 text-shadow">
                 {currentMovie.overview}
             </p>
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
                 <button
                     onClick={() => onSelectMovie(currentMovie)}
-                    className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 transition-transform duration-200 hover:scale-105"
+                    className="px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 transition-all duration-200 hover:scale-105"
                 >
                     {t('viewDetails')}
                 </button>
                  <button
                     onClick={() => onSelectMovie(currentMovie, { playTrailer: true })}
-                    className="flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-lg shadow-md hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-opacity-75 transition-transform duration-200 hover:scale-105"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-50/20 backdrop-blur-sm text-white font-semibold rounded-lg shadow-lg hover:bg-slate-50/30 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-opacity-75 transition-all duration-200 hover:scale-105"
                 >
                     <PlayIcon className="w-5 h-5"/>
                     {t('playTrailer')}
@@ -123,6 +123,15 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ movies, onSelectMovie })
                 display: -webkit-box;
                 -webkit-box-orient: vertical;
                 -webkit-line-clamp: 3;
+            }
+            .shadow-inner-strong {
+              box-shadow: inset 0px -100px 80px -50px rgba(0,0,0,0.5);
+            }
+            .text-shadow {
+              text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+            }
+             .text-shadow-sm {
+              text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
             }
         `}</style>
     </section>

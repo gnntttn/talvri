@@ -73,7 +73,8 @@ export const DesktopHeader: React.FC<DesktopHeaderProps> = ({ activeTab, setActi
         { id: 'movies', label: t('movies') },
         { id: 'tvshows', label: t('tvShows') },
         { id: 'trending', label: t('trending') },
-        { id: 'watchlist', label: t('myWatchlist') },
+        // FIX: Changed 'watchlist' to 'my_library' to match the ActiveTab type definition.
+        { id: 'my_library', label: t('myWatchlist') },
     ];
     
     return (
@@ -118,7 +119,8 @@ export const DesktopHeader: React.FC<DesktopHeaderProps> = ({ activeTab, setActi
                     </button>
                     {isProfileOpen && (
                         <div className="absolute top-full right-0 mt-2 w-48 bg-black/80 border border-gray-700 rounded-md shadow-lg py-1">
-                           <button onClick={() => {setActiveTab('favorites'); setIsProfileOpen(false);}} className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700">{t('favorites')}</button>
+                           {/* FIX: Changed 'favorites' to 'my_library' to match the ActiveTab type definition. */}
+                           <button onClick={() => {setActiveTab('my_library'); setIsProfileOpen(false);}} className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700">{t('favorites')}</button>
                            <button onClick={() => {setActiveTab('people'); setIsProfileOpen(false);}} className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700">{t('people')}</button>
                            <div className="border-t border-gray-700 my-1"></div>
                            <LanguageSelector />

@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useState, useRef } from 'react';
 import type { Movie, WatchProviderDetails, Cast, Crew, Review } from '../types';
 import { TMDB_IMAGE_BASE_URL } from '../constants';
@@ -49,6 +47,12 @@ const StarIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
         <path fillRule="evenodd" d="M10.868 2.884c.321-.662 1.215-.662 1.536 0l1.83 3.751 4.145.604c.731.107 1.023 1.005.494 1.521l-2.998 2.922.708 4.129c.125.728-.638 1.285-1.29.948L10 14.85l-3.713 1.952c-.652.337-1.415-.22-1.29-.948l.708-4.129-2.998-2.922c-.529-.516-.237-1.414.494-1.521l4.145-.604 1.83-3.751Z" clipRule="evenodd" />
     </svg>
+);
+
+const ArrowLeftIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
+    <path fillRule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 4.158a.75.75 0 1 1-1.06 1.06l-5.5-5.5a.75.75 0 0 1 0-1.06l5.5-5.5a.75.75 0 0 1 1.06 1.06L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clipRule="evenodd" />
+  </svg>
 );
 
 const TabButton: React.FC<{ label: string; isActive: boolean; onClick: () => void; }> = ({ label, isActive, onClick }) => (
@@ -209,19 +213,23 @@ export const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({ movie, onC
     return { crew: uniqueCrew, cast: topCast };
   }, [movie.credits]);
 
-  const stopTrailer = () => {
-    if (iframeRef.current) iframeRef.current.src = '';
-    setShowTrailer(false);
-  };
-
-  const handleClose = () => { if (showTrailer) stopTrailer(); onClose(); };
+  const stopTrailer = () => setShowTrailer(false);
+  const handleClose = () => onClose();
   
   useEffect(() => {
     if (playOnMount && trailer) setShowTrailer(true);
   }, [playOnMount, trailer]);
 
   useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => { if (event.key === 'Escape') { if (showTrailer) stopTrailer(); else onClose(); } };
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (showTrailer) {
+          stopTrailer();
+        } else {
+          onClose();
+        }
+      }
+    };
     window.addEventListener('keydown', handleEsc);
     document.body.style.overflow = 'hidden';
     if (!playOnMount) setShowTrailer(false);
@@ -242,24 +250,28 @@ export const MovieDetailsModal: React.FC<MovieDetailsModalProps> = ({ movie, onC
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={handleClose}>
-        {showTrailer && trailer && (
-            <div className="fixed inset-0 bg-black/90 z-40 flex items-center justify-center" onClick={stopTrailer}>
-                <div className="w-full max-w-4xl aspect-video relative" onClick={(e) => e.stopPropagation()}>
-                    <iframe ref={iframeRef} src={`https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1&rel=0`} title={trailer.name} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full"></iframe>
-                </div>
-            </div>
-        )}
-
         <div className="bg-white dark:bg-slate-900 rounded-lg shadow-2xl overflow-y-auto max-h-[95vh] max-w-4xl w-full relative transition-all duration-300 animate-zoomIn" onClick={(e) => e.stopPropagation()}>
-            <button onClick={handleClose} className="absolute top-3 right-3 rtl:left-3 rtl:right-auto z-30 p-1 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors" aria-label={t('closeModal')}>
+            <button onClick={handleClose} className="absolute top-3 right-3 rtl:left-3 rtl:right-auto z-30 p-1 rounded-full bg-slate-200/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors" aria-label={t('closeModal')}>
                 <CloseIcon className="w-6 h-6" />
             </button>
             
-            <div className="relative h-48 sm:h-64 md:h-80 bg-slate-200 dark:bg-slate-800">
-                {movie.backdrop_path && (
-                    <img src={`${TMDB_IMAGE_BASE_URL}/w1280${movie.backdrop_path}`} alt="" className="w-full h-full object-cover opacity-30"/>
+            <div className="relative h-48 sm:h-64 md:h-80 bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                {showTrailer && trailer ? (
+                    <>
+                        <iframe ref={iframeRef} src={`https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1&rel=0&iv_load_policy=3&controls=1&modestbranding=1&showinfo=0`} title={trailer.name} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full absolute inset-0"></iframe>
+                        <button onClick={stopTrailer} className="absolute top-3 left-3 rtl:right-3 rtl:left-auto z-10 p-1 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors flex items-center gap-1 pr-2" aria-label="Back to details">
+                            <ArrowLeftIcon className="w-6 h-6" />
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        {movie.backdrop_path && (
+                            <img src={`${TMDB_IMAGE_BASE_URL}/w1280${movie.backdrop_path}`} alt="" className="w-full h-full object-cover"/>
+                        )}
+                        <div className="absolute inset-0 bg-black/40" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-900 to-transparent" />
+                    </>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-900 to-transparent" />
             </div>
 
             <div className="px-6 md:px-8 pb-8">

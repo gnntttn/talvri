@@ -21,9 +21,9 @@ const CompassIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
-const ListIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+const LibraryIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
-        <path fillRule="evenodd" d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3-3H6a3 3 0 0 1-3-3V6Zm1.5 1.5a.75.75 0 0 0-.75.75V15a.75.75 0 0 0 .75.75H12a.75.75 0 0 0 .75-.75V7.5a.75.75 0 0 0-.75-.75H4.5ZM14.25 7.5a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 .75.75V15a.75.75 0 0 1-.75.75h-4.5a.75.75 0 0 1-.75-.75V7.5Z" clipRule="evenodd" />
+        <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 10H10v-2h8v2zm-4-4H10V8h4v2z"/>
     </svg>
 );
 
@@ -32,7 +32,6 @@ const UserIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
         <path fillRule="evenodd" d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-7 9a7 7 0 1 1 14 0H3Z" clipRule="evenodd" />
     </svg>
 );
-
 
 const NavItem: React.FC<{
   label: string;
@@ -48,13 +47,12 @@ const NavItem: React.FC<{
   );
 };
 
-
 export const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeTab, setActiveTab }) => {
   const { t } = useTranslation();
   const navItems: { id: MobileActiveTab, label: string, icon: React.ReactNode }[] = [
     { id: 'home', label: t('home'), icon: <HomeIcon /> },
     { id: 'discover', label: t('discover'), icon: <CompassIcon /> },
-    { id: 'my_lists', label: t('watchlist'), icon: <ListIcon /> },
+    { id: 'my_library', label: t('myLibrary'), icon: <LibraryIcon /> },
     { id: 'profile', label: t('people'), icon: <UserIcon /> },
   ];
 

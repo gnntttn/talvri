@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { TMDB_IMAGE_BASE_URL } from '../constants';
-import type { TVShow } from '../types';
+import type { TVShow, Video } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
+import { getTvShowVideos } from '../services/tmdbService';
 
 interface TvShowCardProps {
   tvShow: TVShow;
@@ -39,14 +40,57 @@ const HeartIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 export const TvShowCard: React.FC<TvShowCardProps> = ({ tvShow, onSelectTvShow, isFavorite, onToggleFavorite, isWatchlisted, onToggleWatchlist }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const [trailerKey, setTrailerKey] = useState<string | null>(null);
+  const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
+  const hoverTimeout = useRef<number | null>(null);
+
   const imageUrl = tvShow.poster_path
     ? `${TMDB_IMAGE_BASE_URL}/w500${tvShow.poster_path}`
     : null;
 
+  const findTrailerKey = (videos: { results: Video[] }): string | null => {
+    const trailer = videos.results.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'));
+    return trailer ? trailer.key : null;
+  };
+
+  const handleMouseEnter = () => {
+    hoverTimeout.current = window.setTimeout(async () => {
+      setIsLoadingTrailer(true);
+      try {
+        const videos = await getTvShowVideos(tvShow.id, language);
+        const key = findTrailerKey(videos);
+        if (hoverTimeout.current) {
+          setTrailerKey(key);
+        }
+      } catch (error) {
+        console.error("Failed to fetch trailer", error);
+        setTrailerKey(null);
+      } finally {
+        if (hoverTimeout.current) {
+          setIsLoadingTrailer(false);
+        }
+      }
+    }, 500);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeout.current) {
+      clearTimeout(hoverTimeout.current);
+      hoverTimeout.current = null;
+    }
+    setTrailerKey(null);
+    setIsLoadingTrailer(false);
+  };
+
   return (
-    <div className="group cursor-pointer" onClick={() => onSelectTvShow(tvShow)}>
-        <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800 shadow-lg transition-transform duration-300 group-hover:scale-105">
+    <div 
+      className="group cursor-pointer" 
+      onClick={() => onSelectTvShow(tvShow)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800 shadow-md transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl">
         {imageUrl ? (
             <img 
                 src={imageUrl} 
@@ -58,8 +102,25 @@ export const TvShowCard: React.FC<TvShowCardProps> = ({ tvShow, onSelectTvShow, 
                 <PlaceholderIcon className="w-16 h-16 text-slate-400 dark:text-slate-600"/>
             </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-4">
+
+        {trailerKey && (
+          <iframe
+            className="absolute inset-0 w-full h-full border-0 animate-fadeIn z-10"
+            src={`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&mute=1&controls=0&rel=0&loop=1&playlist=${trailerKey}`}
+            title={`${tvShow.name} trailer`}
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        )}
+
+        {isLoadingTrailer && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30" />
+        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-4 z-40">
             <button onClick={(e) => { e.stopPropagation(); onToggleWatchlist(tvShow); }} className="p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-white/20 transition-colors" aria-label={isWatchlisted ? t('removeFromWatchlist') : t('addToWatchlist')}>
                 {isWatchlisted ? <CheckIcon className="w-5 h-5"/> : <PlusIcon className="w-5 h-5"/>}
             </button>
@@ -73,7 +134,7 @@ export const TvShowCard: React.FC<TvShowCardProps> = ({ tvShow, onSelectTvShow, 
         </div>
         <div className="pt-3 text-left rtl:text-right">
             <h3 className="text-sm font-semibold text-slate-800 dark:text-white truncate">{tvShow.name}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{tvShow.first_air_date.split('-')[0]}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{tvShow.first_air_date ? tvShow.first_air_date.split('-')[0] : '\u00A0'}</p>
         </div>
     </div>
   );

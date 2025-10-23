@@ -1,5 +1,5 @@
 import { TMDB_API_KEY, TMDB_BASE_URL } from '../constants';
-import type { Movie, TmdbApiPopularResponse, Genre, PersonDetails, PersonMovieCreditsResponse, TVShow, TmdbApiTvResponse, SeasonDetails, TmdbApiTrendingResponse, TmdbApiPeopleResponse, PersonTvCreditsResponse, Collection, TrendingItem, Person } from '../types';
+import type { Movie, TmdbApiPopularResponse, Genre, PersonDetails, PersonMovieCreditsResponse, TVShow, TmdbApiTvResponse, SeasonDetails, TmdbApiTrendingResponse, TmdbApiPeopleResponse, PersonTvCreditsResponse, Collection, TrendingItem, Person, Video } from '../types';
 
 interface TmdbApiMultiSearchResponse {
     page: number;
@@ -102,6 +102,10 @@ export const discoverMedia = async (
   return fetchFromTmdb(query, language);
 };
 
+export const getMovieVideos = async (movieId: number, language: string): Promise<{ results: Video[] }> => {
+  return fetchFromTmdb<{ results: Video[] }>(`movie/${movieId}/videos`, language);
+};
+
 export const getSimilarMovies = async (movieId: number, page: number = 1, language: string): Promise<TmdbApiPopularResponse> => {
   return fetchFromTmdb<TmdbApiPopularResponse>(`movie/${movieId}/similar?page=${page}`, language);
 };
@@ -145,6 +149,10 @@ export const getTvShowDetails = async (tvId: number, language: string): Promise<
 
 export const searchTvShows = async (query: string, page: number = 1, language: string): Promise<TmdbApiTvResponse> => {
   return fetchFromTmdb<TmdbApiTvResponse>(`search/tv?query=${encodeURIComponent(query)}&page=${page}&include_adult=false`, language);
+};
+
+export const getTvShowVideos = async (tvId: number, language:string): Promise<{ results: Video[] }> => {
+  return fetchFromTmdb<{ results: Video[] }>(`tv/${tvId}/videos`, language);
 };
 
 export const getSimilarTvShows = async (tvId: number, page: number = 1, language: string): Promise<TmdbApiTvResponse> => {

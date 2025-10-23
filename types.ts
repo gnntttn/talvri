@@ -13,7 +13,7 @@ export interface Movie {
   overview: string;
   poster_path: string | null;
   backdrop_path: string | null;
-  release_date: string;
+  release_date: string | null;
   vote_average: number;
   genre_ids: number[];
   genres?: Genre[];
@@ -41,7 +41,7 @@ export interface TVShow {
   overview: string;
   poster_path: string | null;
   backdrop_path: string | null;
-  first_air_date: string;
+  first_air_date: string | null;
   vote_average: number;
   genre_ids: number[];
   genres?: Genre[];
